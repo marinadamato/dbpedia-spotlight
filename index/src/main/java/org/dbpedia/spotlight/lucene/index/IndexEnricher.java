@@ -227,6 +227,128 @@ public class IndexEnricher extends BaseIndexer<Object> {
         done(indexSize);
     }
 
+    public void enrichWithTitlesEnglish(Map<String,LinkedHashSet<String>> titlesMap) throws SearchException, IOException, IndexException {
+
+        System.out.println("fede3");
+
+        long indexSize = searcher.getNumberOfEntries();
+        if (indexSize == 0) {
+            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only add types to an existing index");
+        }
+        System.out.println("fede4");
+        LOG.info("Adding titles to  index "+mLucene.directory()+"...");
+
+        if (titlesMap == null) {
+            LOG.error("Titles map was empty. Done.");
+            return;
+        }
+
+        for (int i=0; i<indexSize; i++) {
+            Document doc = searcher.getFullDocument(i);
+            String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+            //System.out.println("URI: "+uri);
+            LinkedHashSet<String> titles = titlesMap.get(uri);
+            if (titles != null) {
+                for (String title : titles) {
+                    int numberOfAdds = 1;
+                    for (int j=0; j<numberOfAdds; j++) {
+                        doc = mLucene.add(doc, title, "TITLE");
+                    }
+                }
+            } else {
+                System.out.println("null");
+            }
+            Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+            mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
+
+            commit(i);
+        }
+
+        done(indexSize);
+    }
+
+    public void enrichWithImagesEnglish(Map<String,LinkedHashSet<String>> titlesMap) throws SearchException, IOException, IndexException {
+
+        System.out.println("fede3");
+
+        long indexSize = searcher.getNumberOfEntries();
+        if (indexSize == 0) {
+            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only add types to an existing index");
+        }
+        System.out.println("fede4");
+        LOG.info("Adding titles to  index "+mLucene.directory()+"...");
+
+        if (titlesMap == null) {
+            LOG.error("Titles map was empty. Done.");
+            return;
+        }
+
+        for (int i=0; i<indexSize; i++) {
+            Document doc = searcher.getFullDocument(i);
+            String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+            //System.out.println("URI: "+uri);
+            LinkedHashSet<String> titles = titlesMap.get(uri);
+            if (titles != null) {
+                for (String title : titles) {
+                    int numberOfAdds = 1;
+                    for (int j=0; j<numberOfAdds; j++) {
+                        doc = mLucene.addImage(doc, title, "IMAGE");
+                    }
+                }
+            } else {
+                //System.out.println("null");
+            }
+            Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+            mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
+
+            commit(i);
+        }
+
+        done(indexSize);
+    }
+
+
+    public void enrichWithSameAs(Map<String,LinkedHashSet<String>> titlesMap) throws SearchException, IOException, IndexException {
+
+        System.out.println("fede3");
+
+        long indexSize = searcher.getNumberOfEntries();
+        if (indexSize == 0) {
+            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only add sameAs to an existing index");
+        }
+        System.out.println("fede4");
+        LOG.info("Adding sameAs to  index "+mLucene.directory()+"...");
+
+        if (titlesMap == null) {
+            LOG.error("SameAs map was empty. Done.");
+            return;
+        }
+
+        for (int i=0; i<indexSize; i++) {
+            Document doc = searcher.getFullDocument(i);
+            String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+            //System.out.println("URI: "+uri);
+            LinkedHashSet<String> titles = titlesMap.get(uri);
+            if (titles != null) {
+                for (String title : titles) {
+                    int numberOfAdds = 1;
+                    for (int j=0; j<numberOfAdds; j++) {
+                        doc = mLucene.addSameAs(doc, title, "SAMEAS");
+                    }
+                }
+            } else {
+                //System.out.println("null");
+            }
+            Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+            mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
+
+            commit(i);
+        }
+
+        done(indexSize);
+    }
+
+
 
     public void patchAll(Map<String,LinkedHashSet<OntologyType>> typesMap, Map<String,Integer> uriCountMap, Map<String,LinkedHashSet<SurfaceForm>> sfMap) throws SearchException, IOException, IndexException {
         long indexSize = searcher.getNumberOfEntries();
