@@ -50,8 +50,15 @@ public class SpotlightConfiguration {
     public final static String DEFAULT_SPARQL = "";
     public final static String DEFAULT_POLICY = "whitelist";
     public final static String DEFAULT_COREFERENCE_RESOLUTION = "true";
+
+    //qui, al 10 dic 2012, c'è un bug che mi costringe a modificare il codice per far funzionale l'indicizzazione dell'italiano
+    //italiano
     @Deprecated
+    //italiano
+    //public static String DEFAULT_NAMESPACE = "http://it.dbpedia.org/resource/";
+    //inglese
     public static String DEFAULT_NAMESPACE = "http://dbpedia.org/resource/";
+
     @Deprecated
     public static String DEFAULT_ONTOLOGY_PREFIX = "http://dbpedia.org/ontology/";
     @Deprecated
