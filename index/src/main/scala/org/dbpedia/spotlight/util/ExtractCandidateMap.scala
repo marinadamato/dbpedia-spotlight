@@ -152,10 +152,11 @@ object ExtractCandidateMap
         for (redirectUri <- linkMap.keys) {
             val endUri = getEndOfChainUri(linkMap, redirectUri)
             if (conceptURIs contains endUri) {
+              //FEDE: aggiunto print
+              println(redirectUri+"\t"+endUri)
                 redURIstream.println(redirectUri+"\t"+endUri)
             }
         }
-
         redURIstream.close
         LOG.info("Done.")
 //        redirectTCFileName = redirectTCFileName.getAbsolutePath
@@ -163,12 +164,23 @@ object ExtractCandidateMap
     }
 
     private def getEndOfChainUri(m : Map[String,String], k : String) : String = {
+      println("RedirectURI: "+k);
         // get end of chain but check for redirects to itself
         m.get(k) match {
             case Some(s : String) => if (s equals k) k else getEndOfChainUri(m, s)
             case None => k
         }
     }
+
+  //FEDE: modificato il metodo qua sopra
+//  private def getEndOfChainUri(m : Map[String,String], k : String)= {
+//    println("Inizio getEndOfChainUri")
+//    // get end of chain but check for redirects to itself
+//    m.get(k) match {
+//      case Some(s : String) => if (s equals k) println("Some1") else println("Some2")
+//      case None => println("None")
+//    }
+//  }
 
 
     def isGoodSurfaceForm(surfaceForm : String, stopWords : Set[String]) : Boolean = {

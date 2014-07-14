@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory
 import java.io._
 import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 import java.text.ParseException
+import java.net.URLEncoder
 
 /**
  * Gets DBpediaResourceOccurrences from TSV files.
@@ -124,7 +125,28 @@ object FileOccurrenceSource
 
                 if (elements.length == 5) {
                     val id = elements(0)
-                    val res = new DBpediaResource(elements(1), 1) // support is at least one if this resource has been seen once here
+                  //FEDE: modificato qui per il problema dell'encoding
+                  val encodedURI = URLEncoder.encode(elements(1), "UTF-8")
+                  val cleanedURI = encodedURI
+                    .replace("%24", "$")
+                    .replace("%27", "'")
+                    .replace("%28", "(")
+                    .replace("%29", ")")
+                    .replace("%2B", "+")
+                    .replace("%3B", ";")
+                    .replace("%40", "@")
+                    .replace("%7E", "~")
+                    .replace("%21", "!")
+                    .replace("%26", "&")
+                    .replace("%2A", "*")
+                    .replace("%2C", ",")
+                    .replace("%2D", "-")
+                    .replace("%2E", ".")
+                    .replace("%2F", "/")
+                    .replace("%3A", ":")
+
+                  val res = new DBpediaResource(cleanedURI, 1)
+                    //val res = new DBpediaResource(elements(1), 1) // support is at least one if this resource has been seen once here
                     val sf = new SurfaceForm(elements(2))
                     val t = new Text(elements(3))
                     val offset = elements(4).toInt
