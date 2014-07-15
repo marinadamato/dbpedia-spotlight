@@ -26,7 +26,7 @@
         <dbpedia.spotlight.version>0.6</dbpedia.spotlight.version>
 
         <heapspace.Xmx.compiler>-Xmx1g</heapspace.Xmx.compiler>
-        <heapspace.Xmx.indexer>-Xmx1g</heapspace.Xmx.indexer>
+        <heapspace.Xmx.indexer>-Xmx14g</heapspace.Xmx.indexer>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.6</java.compiler.version>
@@ -50,7 +50,6 @@
         <module>core</module>
         <module>rest</module>
         <module>index</module>
-        <module>eval</module>
     </modules>
 
     <build>
@@ -265,11 +264,6 @@
             <dependency>
                 <groupId>org.dbpedia.spotlight</groupId>
                 <artifactId>core</artifactId>
-                <version>${dbpedia.spotlight.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.dbpedia.spotlight</groupId>
-                <artifactId>eval</artifactId>
                 <version>${dbpedia.spotlight.version}</version>
             </dependency>
             <dependency>
