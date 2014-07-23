@@ -1,4 +1,4 @@
-package org.dbpedia.spotlight.lucene.index.external;
+package org.dbpedia.spotlight.lucene.index.external.utils;
 
 import org.apache.lucene.search.ScoreDoc;
 import org.dbpedia.spotlight.exceptions.ConfigurationException;

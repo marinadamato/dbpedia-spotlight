@@ -61,6 +61,11 @@ fi
 #mvn scala:run -Dlauncher=AddImagesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/indexWithTitles"
 
 # create the Knowledge Base Index of TellMeFirst (added by Giuseppe Futia)
+#echo -e "Create the Knowledge Base Index of TellMeFirst... \n"
+#mvn compile
+#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.TMFKnowledgeBaseBuilder" -Dexec.args=$INDEX_CONFIG_FILE
+
+# create the Residual Knowledge Base Index of TellMeFirst (added by Giuseppe Futia)
 echo -e "Create the Knowledge Base Index of TellMeFirst... \n"
 mvn compile
-mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.TMFKnowledgeBaseBuilder" -Dexec.args=$INDEX_CONFIG_FILE
+mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.TMFResidualKnowledgeBaseBuilder" -Dexec.args=$INDEX_CONFIG_FILE
