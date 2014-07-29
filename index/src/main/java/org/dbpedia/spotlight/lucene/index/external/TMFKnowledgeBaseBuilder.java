@@ -1,20 +1,20 @@
 package org.dbpedia.spotlight.lucene.index.external;
 
-import org.dbpedia.spotlight.util.external.TMFUtils;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.snowball.SnowballAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.dbpedia.spotlight.exceptions.ConfigurationException;
+import org.apache.commons.logging.Log;
+import org.dbpedia.spotlight.lucene.index.external.utils.TMFUtils;
+
 import java.io.*;
 import java.lang.String;
 import java.util.*;
@@ -28,6 +28,8 @@ import java.util.Properties;
  * To change this template use File | Settings | File Templates.
  */
 public class TMFKnowledgeBaseBuilder {
+
+    final static Log LOG = LogFactory.getLog(TMFKnowledgeBaseBuilder.class);
 
     private IndexReader reader;
     private IndexWriter writer;
@@ -63,7 +65,11 @@ public class TMFKnowledgeBaseBuilder {
         doc.add(uriField);
         Field kbField = new Field("KB", wikilinks, Field.Store.YES, Field.Index.NOT_ANALYZED);
         doc.add(kbField);
-        writer.addDocument(doc);
+        try{
+            writer.addDocument(doc);
+        }catch (Error error){
+         error.printStackTrace();
+        }
     }
 
     public void deleteFieldFromIndex(String fieldName, int docId, Analyzer analyzer) throws IOException, ConfigurationException {
@@ -87,12 +93,10 @@ public class TMFKnowledgeBaseBuilder {
         for(String wiki : sortedMap.keySet()){
             if (sortedMap.get(wiki) >1  && !TMFUtils.isNumeric(wiki)){
                 newArray.add(wiki);
-                System.out.println(wiki+ " - "+sortedMap.get(wiki));
             }
         }
         StringBuilder sb = new StringBuilder();
         for(String wikilinkUri : newArray){
-            System.out.println(wikilinkUri);
             sb.append(cleanUri(wikilinkUri)+" ");
         }
         return sb.toString();
@@ -133,22 +137,31 @@ public class TMFKnowledgeBaseBuilder {
     public static void main(String[] args) throws IOException, ConfigurationException {
 
         long start = System.currentTimeMillis();
+
         TMFKnowledgeBaseBuilder kbb = new TMFKnowledgeBaseBuilder();
 
         Properties config = new Properties();
+        String confFile = args[0];
         config.load(new FileInputStream(new File(confFile)));
-        // add this properties to indexing.properties
-        String KBPath = config.getProperty("tellmefirst.kb", "").trim();
+        String tmfKBPath = config.getProperty("tellmefirst.kb", "").trim();
         String wikilinksFilePath = config.getProperty("tellmefirst.wikilinks", "").trim();
 
-        kbb.writer = new IndexWriter(KBPath, new StandardAnalyzer(), true);
+        //older implementation of IndexWriter
+        //kbb.writer = new IndexWriter(KBPath, new StandardAnalyzer(), true);
+
+        StandardAnalyzer sa = new StandardAnalyzer(Version.LUCENE_36);
+        Directory directory = FSDirectory.open(new File(tmfKBPath));
+        kbb.writer = new IndexWriter(directory, sa, true, new IndexWriter.MaxFieldLength(25000));
+
         int numLines = kbb.countLines(wikilinksFilePath);
         BufferedReader bufferedReader = new BufferedReader(new FileReader(wikilinksFilePath));
         String line = bufferedReader.readLine();
+        LOG.info("Ignore the first line: "+line);
+        line =  bufferedReader.readLine();
         String uriPresent = line.split(" ")[0];
         String uriPast = uriPresent;
         ArrayList<String> wikilinks = new ArrayList<String>();
-        for(int i = 0; i<numLines; i++){
+        for(int i = 1; i<numLines; i++){
             if(i != numLines-1){
                 if ((uriPresent.equals(uriPast))) {
                     wikilinks.add(line.split(" ")[2]);
@@ -173,6 +186,6 @@ public class TMFKnowledgeBaseBuilder {
         kbb.writer.close();
         long stop = System.currentTimeMillis();
         long time = (stop - start)/(60*1000);
-        System.out.println("Time elapsed: "+time+" minutes.");
+        LOG.info("Time elapsed: "+time+" minutes.");
     }
 }
