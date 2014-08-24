@@ -151,7 +151,7 @@ public class TMFResidualKnowledgeBaseBuilder {
         String uriPresent = line.split(" ")[0];
         String uriPast = uriPresent;
         ArrayList<String> wikilinks = new ArrayList<String>();
-        for(int i = 0; i<numLines; i++){
+        for(int i = 1; i<numLines; i++){
             if(i != numLines-1){
                 if ((uriPresent.equals(uriPast))) {
                     wikilinks.add(line.split(" ")[2]);
