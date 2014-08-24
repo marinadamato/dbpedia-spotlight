@@ -91,7 +91,7 @@ public class TMFKnowledgeBaseBuilder {
         HashMap<String,Integer> sortedMap = sortHashMap(wordCount);
         ArrayList<String> newArray = new ArrayList<String>();
         for(String wiki : sortedMap.keySet()){
-            if (sortedMap.get(wiki) >1  && !TMFUtils.isNumeric(wiki)){
+            if (sortedMap.get(wiki) >1  && !isNumeric(wiki)){
                 newArray.add(wiki);
             }
         }
@@ -132,6 +132,10 @@ public class TMFKnowledgeBaseBuilder {
             }
         }
         return sortedMap;
+    }
+
+    public static boolean isNumeric(String str) {
+        return str.matches("-?\\d+(.\\d+)?");
     }
 
     public static void main(String[] args) throws IOException, ConfigurationException {
