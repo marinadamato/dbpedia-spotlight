@@ -51,13 +51,13 @@ public class SpotlightConfiguration {
     public final static String DEFAULT_POLICY = "whitelist";
     public final static String DEFAULT_COREFERENCE_RESOLUTION = "true";
 
-    //qui, al 10 dic 2012, c'è un bug che mi costringe a modificare il codice per far funzionale l'indicizzazione dell'italiano
-    //italiano
+    //MODIFIED - TODO: correct this bug of DBpedia Spotlight. It is in not able to read config properties
     @Deprecated
-    //italiano
-    //public static String DEFAULT_NAMESPACE = "http://it.dbpedia.org/resource/";
-    //inglese
-    public static String DEFAULT_NAMESPACE = "http://dbpedia.org/resource/";
+    //Italian DEFAULT_NAMESPACE - Uncomment the line below for building TellMeFirst Italian Indexes
+    public static String DEFAULT_NAMESPACE = "http://it.dbpedia.org/resource/";
+
+    //English DEFAULT_NAMESPACE - Uncomment the line below for building TellMeFirst English Indexes
+    //public static String DEFAULT_NAMESPACE = "http://dbpedia.org/resource/";
 
     @Deprecated
     public static String DEFAULT_ONTOLOGY_PREFIX = "http://dbpedia.org/ontology/";
