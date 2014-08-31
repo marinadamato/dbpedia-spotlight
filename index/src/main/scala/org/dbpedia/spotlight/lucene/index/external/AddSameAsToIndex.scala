@@ -1,41 +1,49 @@
+/**
+ * TellMeFirst - A Knowledge Discovery Application
+ *
+ * Copyright (C) 2012 - 2014 Federico Cairo, Giuseppe Futia, Federico Benedetto
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.dbpedia.spotlight.lucene.index.external
 
 import org.dbpedia.spotlight.util.{IndexingConfiguration, TypesLoader}
 import java.io.FileInputStream
 import org.dbpedia.spotlight.lucene.index.IndexEnricher
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
-/**
- * Created with IntelliJ IDEA.
- * User: utente
- * Date: 11/12/12
- * Time: 8.01
- * To change this template use File | Settings | File Templates.
- */
 object AddSameAsToIndex {
 
-  def loadTitles(instanceTypesFileName: String) = {
-    println("fede1")
-    instanceTypesFileName.endsWith(".tsv") match {
-      //case true  => TitlesLoader.getTypesMapFromTSV_java(new File(instanceTypesFileName))
-      case true => TypesLoader.getSomeAsMap_java(new FileInputStream(instanceTypesFileName))
-      case false => TypesLoader.getSomeAsMap_java(new FileInputStream(instanceTypesFileName))
-    }
+  def loadSameAs(interlanguageFileName: String) = {
+    val input = new BZip2CompressorInputStream(new FileInputStream(interlanguageFileName), true)
+    TypesLoader.getSomeAsMap_java(input)
   }
 
   def main(args: Array[String]) {
-    println("Iniziato processo di reindicizzazione...")
     val indexingConfigFileName = args(0)
     val sourceIndexFileName = args(1)
 
     val config = new IndexingConfiguration(indexingConfigFileName)
     val targetIndexFileName = config.get("tellmefirst.index_with_titles_images_sameAs")
-    val instanceTypesFileName = config.get("tellmefirst.sameAs")
+    val interlanguageFileName = config.get("tellmefirst.sameAs")
 
-    val typesIndexer = new IndexEnricher(sourceIndexFileName, targetIndexFileName, config)
+    val interlanguageIndexer = new IndexEnricher(sourceIndexFileName, targetIndexFileName, config)
 
-    val titleMap = loadTitles(instanceTypesFileName)
-    typesIndexer.enrichWithSameAs(titleMap)
-    typesIndexer.close
+    val interlanguageMap = loadSameAs(interlanguageFileName)
+    interlanguageIndexer.enrichWithSameAs(interlanguageMap)
+    interlanguageIndexer.close
   }
 
 }
