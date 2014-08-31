@@ -4,6 +4,8 @@
 # and the final output.
 #
 # @author maxjakob, pablomendes (modified by Federico Cairo and Giuseppe Futia)
+#
+# NOTICE: before starting the indexing process check comments in SpotlightConfiguration.java and in FileOccurrenceSource.scala
 
 export DBPEDIA_WORKSPACE=../data/tellmefirst/dbpedia/en
 
@@ -12,17 +14,29 @@ export INDEX_CONFIG_FILE=../conf/indexing.tmf.en.properties
 JAVA_XMX=16g
 
 
-# you have to run maven2 from the module that contains the indexing classes
+# you have to run maven from the module that contains the indexing classes
 cd ../index
 # the indexing process will generate files in the directory below
-if [ -e $DBPEDIA_WORKSPACE/output  ]; then
-    echo "$DBPEDIA_WORKSPACE"'/output already exist.'
-else
-    mkdir -p $DBPEDIA_WORKSPACE/output
-fi
+#if [ -e $DBPEDIA_WORKSPACE/output  ]; then
+#    echo "$DBPEDIA_WORKSPACE"'/output already exist.'
+#else
+#    mkdir -p $DBPEDIA_WORKSPACE/output
+#fi
 
-# first step is to extract valid URIs, synonyms and surface forms from DBpedia
+# clean redirect file: there is a bug in the DBpedia version 3.9 (added by Giuseppe Futia)
+#mvn compile
+#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFRedirectCleaner" -Dexec.args=$INDEX_CONFIG_FILE
+
+#clean the Wikipedia Dump (added by Giuseppe Futia)
+#mvn compile
+#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFWikiDumpCleaner" -Dexec.args=$INDEX_CONFIG_FILE
+
+# extract valid URIs, synonyms and surface forms from DBpedia
 #mvn scala:run -Dlauncher=ExtractCandidateMap "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE"
+
+# decode URIs of the extracted files from the 3.9 version of DBpedia (added by Giuseppe Futia)
+#mvn compile
+#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFUriDecoder" -Dexec.args=$INDEX_CONFIG_FILE
 
 # now we collect parts of Wikipedia dump where DBpedia resources occur and output those occurrences as Tab-Separated-Values
 #echo -e "Parsing Wikipedia dump to extract occurrences...\n"
@@ -42,11 +56,6 @@ fi
 # (optional) make a backup copy of the index before you lose all the time you've put into this
 #echo -e "Make a backup copy of the index..."
 #cp -R $DBPEDIA_WORKSPACE/output/index $DBPEDIA_WORKSPACE/output/index-backup
-# add surface forms to index
-#echo -e "Adding Surface Forms to index...\n"
-#mvn scala:run -Dlauncher=AddSurfaceFormsToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/index"
-# or
-#mvn scala:run -Dlauncher=CandidateIndexer "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$DBPEDIA_WORKSPACE/output/surfaceForms.tsv|$DBPEDIA_WORKSPACE/output/candidateIndex|3|case-insensitive|overwrite"
 
 # add entity types to index
 #echo -e "Adding Types to index... \n"
@@ -58,12 +67,12 @@ fi
 
 # add images to index (added by Federico Cairo)
 #echo -e "Adding Images to index... \n"
-#mvn scala:run -Dlauncher=AddImagesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/indexWithTitles"
+#mvn scala:run -Dlauncher=AddImagesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/index-withTypesTitles"
 
 # create the Knowledge Base Index of TellMeFirst (added by Giuseppe Futia)
 #echo -e "Create the Knowledge Base Index of TellMeFirst... \n"
-#mvn compile
-#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.TMFKnowledgeBaseBuilder" -Dexec.args=$INDEX_CONFIG_FILE
+mvn compile
+mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.TMFKnowledgeBaseBuilder" -Dexec.args=$INDEX_CONFIG_FILE
 
 # create the Residual Knowledge Base Index of TellMeFirst (added by Giuseppe Futia)
 echo -e "Create the Residual Knowledge Base Index of TellMeFirst... \n"
