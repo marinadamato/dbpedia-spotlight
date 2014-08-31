@@ -1,5 +1,26 @@
+/**
+ * TellMeFirst - A Knowledge Discovery Application
+ *
+ * Copyright (C) 2014 Federico Cairo, Giuseppe Futia, Federico Benedetto
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.dbpedia.spotlight.lucene.index.external;
 
+import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -13,31 +34,25 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.dbpedia.spotlight.exceptions.ConfigurationException;
 import org.apache.commons.logging.Log;
-import org.dbpedia.spotlight.lucene.index.external.utils.TMFUtils;
 
 import java.io.*;
 import java.lang.String;
 import java.util.*;
 import java.util.Properties;
 
-/**
- * Created with IntelliJ IDEA.
- * User: giuseppe
- * Date: 18/07/14
- * Time: 10.46
- * To change this template use File | Settings | File Templates.
- */
+
 public class TMFKnowledgeBaseBuilder {
 
     final static Log LOG = LogFactory.getLog(TMFKnowledgeBaseBuilder.class);
 
     private IndexReader reader;
     private IndexWriter writer;
+    private String language;
 
-    public int countLines(String fileName) throws IOException {
+    public int countLines(String fileName) throws IOException, CompressorException {
         String line;
         int lineCount = 0;
-        BufferedReader br = new BufferedReader(new FileReader(fileName));
+        BufferedReader br = getBufferedReaderForBZ2File(fileName);
         while ((line = br.readLine()) != null) {
             lineCount++;
         }
@@ -46,9 +61,10 @@ public class TMFKnowledgeBaseBuilder {
     }
 
     public String cleanUri(String s) {
-        //for Italian
-        //return s.replace("<http://it.dbpedia.org/resource/", "").replace(">", "").trim();
-        return s.replace("<http://dbpedia.org/resource/", "").replace(">", "").trim();
+        if (language == "English")
+            return s.replace("<http://dbpedia.org/resource/", "").replace(">", "").trim();
+        else
+            return s.replace("<http://it.dbpedia.org/resource/", "").replace(">", "").trim();
     }
 
     public ArrayList<String> cleanUriList(ArrayList<String> list){
@@ -134,11 +150,19 @@ public class TMFKnowledgeBaseBuilder {
         return sortedMap;
     }
 
+
     public static boolean isNumeric(String str) {
         return str.matches("-?\\d+(.\\d+)?");
     }
 
-    public static void main(String[] args) throws IOException, ConfigurationException {
+    public static BufferedReader getBufferedReaderForBZ2File(String fileIn) throws IOException, CompressorException {
+        FileInputStream fin = new FileInputStream(fileIn);
+        BZip2CompressorInputStream input = new BZip2CompressorInputStream(fin, true);
+        BufferedReader br2 = new BufferedReader(new InputStreamReader(input));
+        return br2;
+    }
+
+    public static void main(String[] args) throws IOException, ConfigurationException, CompressorException {
 
         long start = System.currentTimeMillis();
 
@@ -149,7 +173,7 @@ public class TMFKnowledgeBaseBuilder {
         config.load(new FileInputStream(new File(confFile)));
         String tmfKBPath = config.getProperty("tellmefirst.kb", "").trim();
         String wikilinksFilePath = config.getProperty("tellmefirst.wikilinks", "").trim();
-
+        kbb.language = config.getProperty("org.dbpedia.spotlight.language", "").trim();
         //older implementation of IndexWriter
         //kbb.writer = new IndexWriter(KBPath, new StandardAnalyzer(), true);
 
@@ -158,7 +182,7 @@ public class TMFKnowledgeBaseBuilder {
         kbb.writer = new IndexWriter(directory, sa, true, new IndexWriter.MaxFieldLength(25000));
 
         int numLines = kbb.countLines(wikilinksFilePath);
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(wikilinksFilePath));
+        BufferedReader bufferedReader = getBufferedReaderForBZ2File(wikilinksFilePath);
         String line = bufferedReader.readLine();
         LOG.info("Ignore the first line: "+line);
         line =  bufferedReader.readLine();
