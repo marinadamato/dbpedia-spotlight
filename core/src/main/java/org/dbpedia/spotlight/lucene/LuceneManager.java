@@ -339,27 +339,27 @@ public class LuceneManager {
         return doc;
     }
 
-    //FEDE: aggiunto per i titles
+    // Added by Federico Cairo
     public Document add(Document doc, String title, String fieldName) {
-        String cleanTitle = StringEscapeUtils.unescapeJava(title); //necessario?
-        System.out.println("Aggiunto title: "+cleanTitle);
+        String cleanTitle = StringEscapeUtils.unescapeJava(title);
+        //System.out.println("Title added: "+cleanTitle);
         Field typeField = getField(cleanTitle, fieldName);
         doc.add(typeField);
         return doc;
     }
 
 
-    //FEDE: aggiunto per le images
+    // Added by Federico Cairo
     public Document addImage(Document doc, String imageUrl, String fieldName) {
-        System.out.println("Aggiunta image: "+imageUrl);
+        //System.out.println("Image added: "+imageUrl);
         Field typeField = getField(imageUrl, fieldName);
         doc.add(typeField);
         return doc;
     }
 
-    //FEDE: aggiunto per i sameAs
+    // Added by Federico Cairo
     public Document addSameAs(Document doc, String sameAs, String fieldName) {
-        System.out.println("Aggiunto someAs: " + sameAs);
+        //System.out.println("SameAs added: " + sameAs);
         Field typeField = getField(sameAs, fieldName);
         doc.add(typeField);
         return doc;
