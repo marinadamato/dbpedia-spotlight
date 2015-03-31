@@ -6,8 +6,7 @@ TellMeFirst Indexes Builder is a project for creating the Lucene Indexes of [Tel
 
 More documentation is available from the [TellMeFirst Index Builder wiki](https://github.com/tellmefirst/dbpedia-spotlight/wiki). 
 
-
-## Licenses
+## Citation
 
 This customized version of DBpedia Spotlight for creating TellMeFirst Indexes can be used under the terms of the [GNU Affero General Public License 3.0](http://www.gnu.org/licenses/agpl-3.0.html).
 

@@ -18,21 +18,19 @@
 
 package org.dbpedia.spotlight.web.rest;
 
-import de.l3s.boilerpipe.BoilerpipeProcessingException;
-import de.l3s.boilerpipe.extractors.ArticleExtractor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dbpedia.spotlight.disambiguate.ParagraphDisambiguatorJ;
 import org.dbpedia.spotlight.exceptions.InputException;
 import org.dbpedia.spotlight.exceptions.SearchException;
 import org.dbpedia.spotlight.exceptions.SpottingException;
-import org.dbpedia.spotlight.filter.annotations.CombineAllAnnotationFilters;
-import org.dbpedia.spotlight.filter.annotations.PercentageOfSecondFilter;
+import org.dbpedia.spotlight.filter.visitor.FilterElement;
+import org.dbpedia.spotlight.filter.visitor.FilterOccsImpl;
+import org.dbpedia.spotlight.filter.visitor.OccsFilter;
 import org.dbpedia.spotlight.model.*;
 import org.dbpedia.spotlight.spot.Spotter;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +40,7 @@ import java.util.List;
  *
  * @author maxjakob, pablomendes
  */
-public class SpotlightInterface  {
+public class SpotlightInterface {
 
     Log LOG = LogFactory.getLog(this.getClass());
 
@@ -58,6 +56,10 @@ public class SpotlightInterface  {
     public List<DBpediaResourceOccurrence> disambiguate(List<SurfaceFormOccurrence> spots, ParagraphDisambiguatorJ disambiguator) throws SearchException, InputException, SpottingException {
         List<DBpediaResourceOccurrence> resources = new ArrayList<DBpediaResourceOccurrence>();
         if (spots.size()==0) return resources; // nothing to disambiguate
+
+        if(Server.getTokenizer() != null)
+            Server.getTokenizer().tokenizeMaybe(spots.get(0).context());
+
         try {
             resources = disambiguator.disambiguate(Factory.paragraph().fromJ(spots));
         } catch (UnsupportedOperationException e) {
@@ -107,6 +109,10 @@ public class SpotlightInterface  {
 
     public List<SurfaceFormOccurrence> spot(String spotterName, Text context) throws InputException, SpottingException {
         Spotter spotter = Server.getSpotter(spotterName);
+
+        if(Server.getTokenizer() != null)
+            Server.getTokenizer().tokenizeMaybe(context);
+
         List<SurfaceFormOccurrence> spots = spotter.extract(context);
         return spots;
     }
@@ -136,13 +142,14 @@ public class SpotlightInterface  {
             throw new InputException("No text was specified in the &text parameter.");
         }
         Text context = new Text(textString);
+        context.setFeature(new Score("confidence", confidence));
 
         // Find spots to annotate/disambiguate
         List<SurfaceFormOccurrence> spots = spot(spotterName,context);
 
         // Call annotation or disambiguation
         int maxLengthForOccurrenceCentric = 1200; //TODO configuration
-        if (disambiguatorName.equals(SpotlightConfiguration.DisambiguationPolicy.Default.name())
+        if (Server.getTokenizer() == null && disambiguatorName.equals(SpotlightConfiguration.DisambiguationPolicy.Default.name())
                 && textString.length() > maxLengthForOccurrenceCentric) {
             disambiguatorName = SpotlightConfiguration.DisambiguationPolicy.Document.name();
             LOG.info(String.format("Text length > %d. Using %s to disambiguate.",maxLengthForOccurrenceCentric,disambiguatorName));
@@ -150,17 +157,10 @@ public class SpotlightInterface  {
         ParagraphDisambiguatorJ disambiguator = Server.getDisambiguator(disambiguatorName);
         List<DBpediaResourceOccurrence> occList = disambiguate(spots, disambiguator);
 
-        // Linking / filtering
-        scala.collection.immutable.List<OntologyType> ontologyTypes = Factory.ontologyType().fromCSVString(ontologyTypesString);
+        FilterElement filter = new OccsFilter(confidence, support, ontologyTypesString, sparqlQuery, blacklist, coreferenceResolution, Server.getSimilarityThresholds(), Server.getSparqlExecute());
+        occList = filter.accept(new FilterOccsImpl() ,occList);
 
-        // Filter: Old monolithic way
-        CombineAllAnnotationFilters annotationFilter = new CombineAllAnnotationFilters(Server.getConfiguration());
-        PercentageOfSecondFilter anotherFilter = new PercentageOfSecondFilter(confidence);
-        occList = annotationFilter.filter(occList, confidence, support, ontologyTypes, sparqlQuery, blacklist, coreferenceResolution);
-        occList = anotherFilter.filterOccs(occList);
-        // Filter: TODO run occurrences through a list of annotation filters (which can be passed by parameter)
-        // Map<String,AnnotationFilter> annotationFilters = buildFilters(occList, confidence, support, dbpediaTypes, sparqlQuery, blacklist, coreferenceResolution);
-        //AnnotationFilter annotationFilter = annotationFilters.get(CombineAllAnnotationFilters.class.getSimpleName());
+
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Shown:");
@@ -270,25 +270,23 @@ public class SpotlightInterface  {
                          String disambiguator,
 			 String format,
 			 String prefix,
-			 String recipe,
-			 int ctxLength
-   ) throws Exception {
+			 String requestedURL) throws Exception {
         String result;
         String textToProcess = ServerUtils.getTextToProcess(text, inUrl);
 
-	// when no prefix argument specified and url param is used the prefix
-	// is set to the given url
-	if (prefix == null && !inUrl.equals(""))
-	    prefix = inUrl + "#";
-	// when no prefix argument specified and text param is used the prefix
-	// is set to the spotlight url + the given text
-	else if (prefix == null && !text.equals(""))
-	    prefix = "http://spotlight.dbpedia.org/rest/document/?text="+text+"#";
+	    // when no prefix argument specified and url param is used the prefix
+	    // is set to the given url
+	    if (prefix == null && !inUrl.equals(""))
+	        prefix = inUrl;
+	        // when no prefix argument specified and text param is used the prefix
+	        // is set to the spotlight url + the given text
+	    else if (prefix == null && !text.equals(""))
+	        prefix = requestedURL.concat("/?text=").concat(URLEncoder.encode(text, "UTF-8"));
 	
-	List<DBpediaResourceOccurrence> occs = getOccurrences(textToProcess, confidence, support, dbpediaTypesString, sparqlQuery, policy, coreferenceResolution, clientIp, spotter,disambiguator);
-	result = outputManager.makeNIF(textToProcess, occs, format, prefix, recipe, ctxLength);
+	    List<DBpediaResourceOccurrence> occs = getOccurrences(textToProcess, confidence, support, dbpediaTypesString, sparqlQuery, policy, coreferenceResolution, clientIp, spotter,disambiguator);
+	    result = outputManager.makeNIF(textToProcess, occs, format, prefix);
 
-	LOG.info("NIF format: " + format);
+	    LOG.info("NIF format: " + format);
         LOG.debug("****************************************************************");
 
         return result;

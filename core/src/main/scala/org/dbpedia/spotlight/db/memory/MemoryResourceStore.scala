@@ -1,18 +1,17 @@
 package org.dbpedia.spotlight.db.memory
 
+import org.dbpedia.spotlight.log.SpotlightLog
 import org.dbpedia.spotlight.model.DBpediaResource
-import gnu.trove.TObjectIntHashMap
-import java.lang.{Short, String}
+import java.lang.String
 import scala.collection.JavaConversions._
 import scala.{throws, transient}
-import org.dbpedia.spotlight.exceptions.{SurfaceFormNotFoundException, DBpediaResourceNotFoundException}
+import org.dbpedia.spotlight.exceptions.DBpediaResourceNotFoundException
 import org.dbpedia.spotlight.db.model.{OntologyTypeStore, ResourceStore}
+import java.lang.Integer
+import util.StringToIDMapFactory
 
 /**
  * @author Joachim Daiber
- *
- *
- *
  */
 
 @SerialVersionUID(1003001)
@@ -22,29 +21,29 @@ class MemoryResourceStore
 
   var ontologyTypeStore: OntologyTypeStore = null
 
-  var supportForID: Array[Int] = null
+  var supportForID: Array[Short] = null
   var uriForID: Array[String] = null
-  var typesForID: Array[Array[Short]] = null
+  var typesForID: Array[Array[java.lang.Short]] = null
 
   @transient
-  var idFromURI: TObjectIntHashMap = null
+  var idFromURI: java.util.Map[String, Integer] = null
 
   @transient
   var totalSupport = 0.0
 
   override def loaded() {
     createReverseLookup()
-    LOG.info("Counting total support...")
-    totalSupport = supportForID.sum.toDouble
-    LOG.info("Done.")
+    SpotlightLog.info(this.getClass, "Counting total support...")
+    totalSupport = supportForID.map(q => qc(q)).sum.toDouble
+    SpotlightLog.info(this.getClass, "Done.")
   }
 
   def size = uriForID.size
 
   def createReverseLookup() {
     if (uriForID != null) {
-      System.err.println("Creating reverse-lookup for DBpedia resources.")
-      idFromURI = new TObjectIntHashMap(uriForID.size)
+      SpotlightLog.info(this.getClass, "Creating reverse-lookup for DBpedia resources.")
+      idFromURI = StringToIDMapFactory.createDefault(uriForID.size)
 
       var i = 0
       uriForID foreach { uri => {
@@ -59,7 +58,7 @@ class MemoryResourceStore
   def getResource(id: Int): DBpediaResource = {
 
     val uri = try {
-        uriForID(id)
+      uriForID(id)
     } catch {
       case e: java.lang.ArrayIndexOutOfBoundsException => null
     }
@@ -70,9 +69,11 @@ class MemoryResourceStore
     val support = supportForID(id)
     val typeIDs = typesForID(id)
 
-    val res = new DBpediaResource(uri, support)
+    val res = new DBpediaResource(uri, qc(support))
+    res.uri = uri
+
     res.id = id
-    res.setTypes((typeIDs map { typeID: Short => ontologyTypeStore.getOntologyType(typeID) }).toList)
+    res.setTypes((typeIDs map { typeID: java.lang.Short => ontologyTypeStore.getOntologyType(typeID) }).toList)
 
     res.setPrior(res.support / totalSupport)
 
@@ -82,8 +83,8 @@ class MemoryResourceStore
   @throws(classOf[DBpediaResourceNotFoundException])
   def getResourceByName(name: String): DBpediaResource = {
     idFromURI.get(name) match {
-      case id: Int if id > 0 => getResource(id)
-      case id: Int if id == 0 => throw new DBpediaResourceNotFoundException("Could not find %s".format(name))
+      case id: Integer if id > 0 => getResource(id)
+      case _ => throw new DBpediaResourceNotFoundException("Could not find %s".format(name))
     }
   }
 

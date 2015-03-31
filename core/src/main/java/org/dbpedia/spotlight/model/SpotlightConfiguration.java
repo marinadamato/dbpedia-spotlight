@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.BooleanQuery;
 import org.dbpedia.spotlight.exceptions.ConfigurationException;
+import org.dbpedia.spotlight.sparql.SparqlQueryExecuter;
 
 import java.io.*;
 import java.net.URI;
@@ -44,8 +45,16 @@ public class SpotlightConfiguration {
     //TODO could get all of these from configuration file
     public final static String DEFAULT_TEXT = "";
     public final static String DEFAULT_URL = "";
-    public final static String DEFAULT_CONFIDENCE = "0.1";
-    public final static String DEFAULT_SUPPORT = "10";
+
+    /*
+      This is a very very bad hack, as it breaks the default values for the Lucene
+      backend. The statistical backend requires these default values. This whole
+      REST interface should be refactored and default values should be set-able by
+      backend (previous: 0.1 and 10)!
+    */
+    public final static String DEFAULT_CONFIDENCE = "0.5";
+    public final static String DEFAULT_SUPPORT = "0";
+
     public final static String DEFAULT_TYPES = "";
     public final static String DEFAULT_SPARQL = "";
     public final static String DEFAULT_POLICY = "whitelist";
@@ -290,8 +299,8 @@ public class SpotlightConfiguration {
         // Configure lucene to accept a larger number of or queries
         BooleanQuery.setMaxClauseCount(3072);
 
-        sparqlEndpoint = config.getProperty("org.dbpedia.spotlight.sparql.endpoint", "").trim(); //TODO how to fail gracefully for endpoint?
-        sparqlMainGraph = config.getProperty("org.dbpedia.spotlight.sparql.graph", "").trim();
+        sparqlEndpoint = config.getProperty("org.dbpedia.spotlight.sparql.endpoint", "http://dbpedia.org/sparql").trim();
+        sparqlMainGraph = config.getProperty("org.dbpedia.spotlight.sparql.graph", "http://dbpedia.org").trim();
 
 
         String maxCacheSizeString = config.getProperty("jcs.default.cacheattributes.MaxObjects", "").trim();

@@ -18,7 +18,7 @@
 
 package org.dbpedia.spotlight.model
 
-import org.apache.commons.logging.LogFactory
+import org.dbpedia.spotlight.log.SpotlightLog
 import org.dbpedia.spotlight.lucene.LuceneManager
 import org.dbpedia.spotlight.lucene.similarity.{JCSTermCache, CachedInvCandFreqSimilarity}
 import com.aliasi.sentences.IndoEuropeanSentenceModel
@@ -27,7 +27,6 @@ import org.dbpedia.spotlight.spot.lingpipe.LingPipeSpotter
 import java.io.File
 import org.dbpedia.spotlight.spot._
 import opennlp.{ProbabilisticSurfaceFormDictionary, OpenNLPChunkerSpotter}
-import org.dbpedia.spotlight.filter.annotations.CombineAllAnnotationFilters
 import org.dbpedia.spotlight.tagging.lingpipe.{LingPipeTextUtil, LingPipeTaggedTokenProvider, LingPipeFactory}
 import collection.JavaConversions._
 import org.dbpedia.spotlight.annotate.DefaultAnnotator
@@ -46,9 +45,6 @@ import org.dbpedia.spotlight.exceptions.ConfigurationException
  * @author pablomendes
  */
 class SpotlightFactory(val configuration: SpotlightConfiguration) {
-
-    private val LOG = LogFactory.getLog(this.getClass)
-
     val analyzer = configuration.analyzer
     assert(analyzer!=null)
 
@@ -85,12 +81,12 @@ class SpotlightFactory(val configuration: SpotlightConfiguration) {
     val disambiguators = new java.util.LinkedHashMap[SpotlightConfiguration.DisambiguationPolicy,ParagraphDisambiguatorJ]()
 
     //populate
-    LOG.info("Initiating spotters...")
+    SpotlightLog.info(this.getClass, "Initiating spotters...")
     lazy val spotDict : Dictionary[String] = AbstractExternalizable.readObject(new File(configuration.getSpotterConfiguration.getSpotterFile)).asInstanceOf[Dictionary[String]] //TODO temp until new configuration is in place
     spotter()
-    LOG.info("Initiating disambiguators...")
+    SpotlightLog.info(this.getClass, "Initiating disambiguators...")
     disambiguator()
-    LOG.info("Done.")
+    SpotlightLog.info(this.getClass, "Done.")
 
     def spotter(policy: SpotterConfiguration.SpotterPolicy) : Spotter = {
         if (policy == SpotterConfiguration.SpotterPolicy.Default) {
@@ -166,10 +162,6 @@ class SpotlightFactory(val configuration: SpotlightConfiguration) {
     def annotator() ={
         new DefaultAnnotator(spotter(), new MergedOccurrencesDisambiguator(contextSearcher))
         //new DefaultParagraphAnnotator(spotter(), disambiguator())
-    }
-
-    def filter() ={
-        new CombineAllAnnotationFilters(configuration)
     }
 
     def taggedTokenProvider() = {

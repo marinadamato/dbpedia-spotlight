@@ -1,12 +1,12 @@
 package org.dbpedia.spotlight.db.memory
 
-import org.dbpedia.spotlight.model.{Token, DBpediaResource}
 import java.util.{Map, HashMap}
 import scala.collection.JavaConversions._
-import org.dbpedia.spotlight.db.model.{TokenStore, ContextStore}
+import org.dbpedia.spotlight.db.model.{TokenTypeStore, ContextStore}
 import com.esotericsoftware.kryo.io.{Input, Output}
 import org.apache.commons.lang.{SerializationException, NotImplementedException}
 import com.esotericsoftware.kryo.{KryoException, Kryo, KryoSerializable}
+import org.dbpedia.spotlight.model.{TokenType, Token, DBpediaResource}
 
 
 /**
@@ -23,20 +23,25 @@ class MemoryContextStore
   with KryoSerializable {
 
   @transient
-  var tokenStore: TokenStore = null
+  var tokenStore: TokenTypeStore = null
+
+  @transient
+  var totalTokenCounts: Array[Int] = null
 
   var tokens: Array[Array[Int]] = null
-  var counts: Array[Array[Int]] = null
+  var counts: Array[Array[Short]] = null
 
   def size = tokens.length
 
-  def getContextCount(resource: DBpediaResource, token: Token): Int = {
+  def getContextCount(resource: DBpediaResource, token: TokenType): Int = {
     throw new NotImplementedException()
   }
 
-  def getContextCounts(resource: DBpediaResource): Map[Token, Int] = {
+  def getTotalTokenCount(resource: DBpediaResource): Int = totalTokenCounts(resource.id)
 
-    val contextCounts = new HashMap[Token, Int]()
+  def getContextCounts(resource: DBpediaResource): Map[TokenType, Int] = {
+
+    val contextCounts = new HashMap[TokenType, Int]()
     val i = resource.id
 
     if (tokens(i) != null) {
@@ -44,11 +49,19 @@ class MemoryContextStore
       val c = counts(i)
 
       (0 to t.length-1) foreach { j =>
-        contextCounts.put(tokenStore.getTokenByID(t(j)), c(j))
+        contextCounts.put(tokenStore.getTokenTypeByID(t(j)), qc(c(j)))
       }
     }
 
     contextCounts
+  }
+
+
+  def getRawContextCounts(resource: DBpediaResource): (Seq[Int], Seq[Int]) = {
+    if(tokens(resource.id) == null)
+      (Seq[Int](), Seq[Int]())
+    else
+      (tokens(resource.id), counts(resource.id).map(qc))
   }
 
   def write(kryo: Kryo, output: Output) {
@@ -64,18 +77,40 @@ class MemoryContextStore
           output.writeInt(tokens(i)(j))
         }
         (0 to tokens(i).length-1).foreach{ j =>
-          output.writeInt(counts(i)(j))
+          output.writeShort(counts(i)(j).toInt)
         }
       }
     }
     output.writeChar('#')
   }
 
+  /*
+  * Calculates totalTokenCounts once kryo has read the Serialized Object
+  * */
+  def calculateTotalTokenCounts(){
+    var i = 0
+    while(i < counts.size){
+
+      if (counts(i).isInstanceOf[Array[Short]]){
+        var j = 0
+
+        while(j < counts(i).size ){
+          totalTokenCounts(i) += qc(counts(i)(j))
+          j += 1
+        }
+
+      }
+      i += 1
+    }
+  }
+
+
   def read(kryo: Kryo, input: Input) {
     val size = input.readInt()
 
     tokens = new Array[Array[Int]](size)
-    counts = new Array[Array[Int]](size)
+    counts = new Array[Array[Short]](size)
+    totalTokenCounts = new Array[Int](size)
 
     var i = 0
     var j = 0
@@ -85,7 +120,7 @@ class MemoryContextStore
 
       if (subsize > 0) {
         tokens(i) = new Array[Int](subsize)
-        counts(i) = new Array[Int](subsize)
+        counts(i) = new Array[Short](subsize)
 
         j = 0
         while(j < subsize) {
@@ -95,7 +130,7 @@ class MemoryContextStore
 
         j = 0
         while(j < subsize) {
-          counts(i)(j) = input.readInt()
+          counts(i)(j) = input.readShort()
           j += 1
         }
      }

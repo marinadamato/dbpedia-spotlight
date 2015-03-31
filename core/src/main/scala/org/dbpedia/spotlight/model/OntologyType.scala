@@ -26,36 +26,38 @@ import java.lang.{Short, String}
  * @author maxjakob
  * @author Joachim Daiber
  * @author pablomendes (introduced and fixed bug for OntologyType.equals :)
+ * @author dirk.weissenborn (introduced opencyc)
  */
 
 trait OntologyType extends Serializable {
-  def getFullUri: String
-  def typeID: String = "OntologyTypeUnknown"
+      def getFullUri: String
+      def typeID: String = "OntologyTypeUnknown"
 
-  var id: Short = 0.toShort
+      var id: Short = 0.toShort
 
-  override def hashCode() : Int = {
-    typeID.hashCode()
-  }
+      override def hashCode() : Int = {
+        typeID.hashCode()
+      }
 
-  override def equals(other : Any) : Boolean = {
-      if (other==null)
-           false
-      else
-        other match {
-            case o: OntologyType => o.typeID != null && o.typeID.equals(typeID)
-            case _ => false;
-        }
-  }
+      override def equals(other : Any) : Boolean = {
+          if (other==null)
+               false
+          else
+            other match {
+                case o: OntologyType => o.typeID != null && o.typeID.equals(typeID)
+                case _ => false;
+            }
+      }
 
-  override def toString = typeID
+      override def toString = typeID
 }
-
 
 /**
  * Types from the DBpedia ontology (hierarchical)
  */
 
+
+@SerialVersionUID(8037662401509425326l)
 class DBpediaType(var name : String) extends OntologyType {
 
     name = name.replace(DBpediaType.DBPEDIA_ONTOLOGY_PREFIX, "")
@@ -70,8 +72,8 @@ class DBpediaType(var name : String) extends OntologyType {
         name.equalsIgnoreCase(that.name)
     }
 
-    override def getFullUri = DBpediaType.DBPEDIA_ONTOLOGY_PREFIX + name
-    override def typeID = new StringBuilder("DBpedia:").append(name).toString()
+    override def getFullUri =  if (name.toLowerCase.startsWith("http")) name else DBpediaType.DBPEDIA_ONTOLOGY_PREFIX + name
+    override def typeID = if (name.toLowerCase.startsWith("http")) name else "DBpedia:".concat(name)
 
 }
 
@@ -85,6 +87,7 @@ object DBpediaType {
  * Types from Freebase: non-hierarchical, grouped into domains.
  */
 
+@SerialVersionUID(8037662401509425325l)
 class FreebaseType(val domain: String, val typeName: String) extends OntologyType {
 
   override def getFullUri = FreebaseType.FREEBASE_RDF_PREFIX + domain + "." + typeName
@@ -119,6 +122,7 @@ object FreebaseType {
   val FREEBASE_RDF_PREFIX = "http://rdf.freebase.com/ns"
 }
 
+@SerialVersionUID(8037662401509425324l)
 class SchemaOrgType(var name : String) extends OntologyType {
 
     name = name.replace(SchemaOrgType.SCHEMAORG_PREFIX, "")
@@ -136,4 +140,23 @@ class SchemaOrgType(var name : String) extends OntologyType {
 
 object SchemaOrgType {
     val SCHEMAORG_PREFIX = "http://schema.org/"
+}
+
+
+@SerialVersionUID(8037662401509425323l)
+class OpenCycConcept(var name : String) extends OntologyType {
+
+    name = name.replace(OpenCycConcept.OPENCYCCONCEPT_PREFIX, "")
+
+    def equals(that : OpenCycConcept) : Boolean = {
+        name.equalsIgnoreCase(that.name)
+    }
+
+    override def getFullUri = OpenCycConcept.OPENCYCCONCEPT_PREFIX + name
+    override def typeID = "OpenCyc:" + name
+
+}
+
+object OpenCycConcept {
+    val OPENCYCCONCEPT_PREFIX = "http://sw.opencyc.org/concept/"
 }
