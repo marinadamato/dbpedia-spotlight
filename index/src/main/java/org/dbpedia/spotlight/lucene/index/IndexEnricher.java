@@ -206,24 +206,129 @@ public class IndexEnricher extends BaseIndexer<Object> {
         }
 
         for (int i=0; i<indexSize; i++) {
-                Document doc = searcher.getFullDocument(i);
-                String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
-                LinkedHashSet<OntologyType> types = typesMap.get(uri);
-                if (types != null) {
-                    for (OntologyType t : types) {
-                        int numberOfAdds = 1;
-                        for (int j=0; j<numberOfAdds; j++) {
-                            doc = mLucene.add(doc, t);
-                        }
+            Document doc = searcher.getFullDocument(i);
+            String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+
+            LinkedHashSet<OntologyType> types = typesMap.get(uri);
+            if (types != null) {
+                for (OntologyType t : types) {
+                    int numberOfAdds = 1;
+                    for (int j=0; j<numberOfAdds; j++) {
+                        doc = mLucene.add(doc, t);
                     }
                 }
-                Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
-                mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
+            }
+            Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+            mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
 
-                commit(i);
+            commit(i);
         }
 
         done(indexSize);
+    }
+
+
+    public void patchAll(Map<String,LinkedHashSet<OntologyType>> typesMap, Map<String,Integer> uriCountMap, Map<String,LinkedHashSet<SurfaceForm>> sfMap) throws SearchException, IOException, IndexException {
+        long indexSize = searcher.getNumberOfEntries();
+        if (indexSize == 0) {
+            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only patch an existing index");
+        }
+        LOG.info("Patching index "+mLucene.directory()+"...");
+
+        if (typesMap == null || uriCountMap == null || sfMap == null) {
+            throw new IllegalArgumentException("types, uri counts and surface forms should be populated.");
+        }
+
+        for(int i=0; i<indexSize; i++) {
+            if (!searcher.isDeleted(i)) {
+                Document doc = searcher.getFullDocument(i);
+                String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+
+                // add types
+                LinkedHashSet<OntologyType> types = typesMap.get(uri);
+                if (types != null) for (OntologyType t : types) doc = mLucene.add(doc, t);
+                // add counts
+                doc = mLucene.add(doc, uriCountMap.get(uri));
+                // add surface forms
+                LinkedHashSet<SurfaceForm> extraSfs = sfMap.remove(uri);
+                if (extraSfs != null) for (SurfaceForm sf : extraSfs) doc = mLucene.add(doc, sf);
+
+                // update document in index
+                Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+                mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
+
+                // write to disk for every 10000 or so entries
+                commit(i);
+            }
+        }
+
+        done(indexSize);
+    }
+    /**
+     * Goes through the index and unstores surface forms and context.
+     *
+     * @throws SearchException: inherited from searcher.getFullDocument
+     * @throws IOException: inherited from mWriter.updateDocument
+     */
+    public void unstore(List<LuceneManager.DBpediaResourceField> unstoreFields, int optimizeSegments) throws SearchException, IOException {
+        unstore(unstoreFields,optimizeSegments,0);
+    }
+    public void unstore(List<LuceneManager.DBpediaResourceField> unstoreFields, int optimizeSegments, int minCount) throws SearchException, IOException {
+        //List<LuceneManager.DBpediaResourceField> unstoreFields = new LinkedList<LuceneManager.DBpediaResourceField>();
+
+        long indexSize = searcher.getNumberOfEntries();
+        if (indexSize == 0) {
+            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only unstore fields of an existing index");
+        }
+        LOG.info("Unstoring "+unstoreFields+" in index "+mLucene.directory()+"...");
+        for (int i=0; i<indexSize; i++) {
+            if (!searcher.isDeleted(i)) {
+                LOG.trace("URI_COUNT did not exist. Creating from multiple URI fields.");
+                Document doc = searcher.getFullDocument(i);
+                String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
+
+                int support = 0;
+                Field uriCount = doc.getField(LuceneManager.DBpediaResourceField.URI_COUNT.toString());
+                if (uriCount==null) {
+                    Field[] uriFields = doc.getFields(LuceneManager.DBpediaResourceField.URI.toString());
+                    support = uriFields.length;
+                    uriCount = this.mLucene.getUriCountField(support);
+                    doc.add(uriCount); // add count
+                    doc.removeFields(LuceneManager.DBpediaResourceField.URI.toString()); // remove repeated fields
+                    doc.add(uriFields[0]); // add only once
+                }
+                else support = new Integer(uriCount.stringValue());
+                LOG.trace(String.format("URI count for %s = %d",uri,support));
+
+                Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
+                if (support<minCount) {
+                    LOG.debug(String.format("Dropping %s; count = %d",uri,support));
+                    mWriter.deleteDocuments(uriTerm);
+                } else {
+                    doc = mLucene.unstore(doc, unstoreFields);
+                    mWriter.updateDocument(uriTerm, doc); //deletes everything with this uri and writes a new doc
+                }
+                commit(i);
+            }
+        }
+
+        LOG.info("Processed "+indexSize+" documents. Final commit...");
+        mWriter.commit();
+
+        if(optimizeSegments > 0) {
+            LOG.info("Optimizing...");
+            mWriter.optimize(optimizeSegments);
+            mWriter.commit();
+        } else {
+            LOG.info("Expunge deletes...");
+            mWriter.expungeDeletes();
+        }
+
+        LOG.info("Done.");
+    }
+
+    public void add(Object o) {
+        //TODO re-factoring to make this an
     }
 
     public void enrichWithTitlesEnglish(Map<String,LinkedHashSet<String>> titlesMap) throws SearchException, IOException, IndexException {
@@ -338,111 +443,6 @@ public class IndexEnricher extends BaseIndexer<Object> {
         }
 
         done(indexSize);
-    }
-
-
-
-    public void patchAll(Map<String,LinkedHashSet<OntologyType>> typesMap, Map<String,Integer> uriCountMap, Map<String,LinkedHashSet<SurfaceForm>> sfMap) throws SearchException, IOException, IndexException {
-        long indexSize = searcher.getNumberOfEntries();
-        if (indexSize == 0) {
-            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only patch an existing index");
-        }
-        LOG.info("Patching index "+mLucene.directory()+"...");
-
-        if (typesMap == null || uriCountMap == null || sfMap == null) {
-            throw new IllegalArgumentException("types, uri counts and surface forms should be populated.");
-        }
-
-        for(int i=0; i<indexSize; i++) {
-            if (!searcher.isDeleted(i)) {
-                Document doc = searcher.getFullDocument(i);
-                String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
-
-                // add types
-                LinkedHashSet<OntologyType> types = typesMap.get(uri);
-                if (types != null) for (OntologyType t : types) doc = mLucene.add(doc, t);
-                // add counts
-                doc = mLucene.add(doc, uriCountMap.get(uri));
-                // add surface forms
-                LinkedHashSet<SurfaceForm> extraSfs = sfMap.remove(uri);
-                if (extraSfs != null) for (SurfaceForm sf : extraSfs) doc = mLucene.add(doc, sf);
-
-                // update document in index
-                Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
-                mWriter.updateDocument(uriTerm, doc);  //deletes everything with this uri and writes a new doc
-
-                // write to disk for every 10000 or so entries
-                commit(i);
-            }
-        }
-
-        done(indexSize);
-    }
-    /**
-     * Goes through the index and unstores surface forms and context.
-     *
-     * @throws SearchException: inherited from searcher.getFullDocument
-     * @throws IOException: inherited from mWriter.updateDocument
-     */
-    public void unstore(List<LuceneManager.DBpediaResourceField> unstoreFields, int optimizeSegments) throws SearchException, IOException {
-        unstore(unstoreFields,optimizeSegments,0);
-    }
-    public void unstore(List<LuceneManager.DBpediaResourceField> unstoreFields, int optimizeSegments, int minCount) throws SearchException, IOException {
-        //List<LuceneManager.DBpediaResourceField> unstoreFields = new LinkedList<LuceneManager.DBpediaResourceField>();
-
-        long indexSize = searcher.getNumberOfEntries();
-        if (indexSize == 0) {
-            throw new IllegalArgumentException("index in "+mLucene.directory()+" contains no entries; this method can only unstore fields of an existing index");
-        }
-        LOG.info("Unstoring "+unstoreFields+" in index "+mLucene.directory()+"...");
-        for (int i=0; i<indexSize; i++) {
-            if (!searcher.isDeleted(i)) {
-                LOG.trace("URI_COUNT did not exist. Creating from multiple URI fields.");
-                Document doc = searcher.getFullDocument(i);
-                String uri = doc.getField(LuceneManager.DBpediaResourceField.URI.toString()).stringValue();
-
-                int support = 0;
-                Field uriCount = doc.getField(LuceneManager.DBpediaResourceField.URI_COUNT.toString());
-                if (uriCount==null) {
-                    Field[] uriFields = doc.getFields(LuceneManager.DBpediaResourceField.URI.toString());
-                    support = uriFields.length;
-                    uriCount = this.mLucene.getUriCountField(support);
-                    doc.add(uriCount); // add count
-                    doc.removeFields(LuceneManager.DBpediaResourceField.URI.toString()); // remove repeated fields
-                    doc.add(uriFields[0]); // add only once
-                }
-                else support = new Integer(uriCount.stringValue());
-                LOG.trace(String.format("URI count for %s = %d",uri,support));
-
-                Term uriTerm = new Term(LuceneManager.DBpediaResourceField.URI.toString(), uri);
-                if (support<minCount) {
-                    LOG.debug(String.format("Dropping %s; count = %d",uri,support));
-                    mWriter.deleteDocuments(uriTerm);
-                } else {
-                    doc = mLucene.unstore(doc, unstoreFields);
-                    mWriter.updateDocument(uriTerm, doc); //deletes everything with this uri and writes a new doc
-                }
-                commit(i);
-            }
-        }
-
-        LOG.info("Processed "+indexSize+" documents. Final commit...");
-        mWriter.commit();
-
-        if(optimizeSegments > 0) {
-            LOG.info("Optimizing...");
-            mWriter.optimize(optimizeSegments);
-            mWriter.commit();
-        } else {
-            LOG.info("Expunge deletes...");
-            mWriter.expungeDeletes();
-        }
-
-        LOG.info("Done.");
-    }
-
-    public void add(Object o) {
-        //TODO re-factoring to make this an
     }
 
 }

@@ -1,7 +1,12 @@
 *.iml
 .idea
+.classpath
+.project
+.settings/
 target
 *.log
+*~
+index/output
 data/tellmefirst/dbpedia/en/original/*
 !data/tellmefirst/dbpedia/en/original/blacklistedURIPatterns.en.list
 !data/tellmefirst/dbpedia/en/original/stopwords.en.list

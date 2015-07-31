@@ -11,7 +11,7 @@ import org.apache.lucene.util.Version
 import org.dbpedia.spotlight.model.{Factory, SurfaceFormOccurrence}
 import collection.JavaConversions
 import org.apache.lucene.analysis._
-import org.apache.commons.logging.LogFactory
+import org.dbpedia.spotlight.log.SpotlightLog
 import org.apache.lucene.analysis.standard.{StandardAnalyzer, ClassicAnalyzer}
 
 /**
@@ -20,7 +20,10 @@ import org.apache.lucene.analysis.standard.{StandardAnalyzer, ClassicAnalyzer}
  */
 object EvalSpotter {
 
-    private val LOG = LogFactory.getLog(this.getClass)
+  def evalCorpus = {
+    MilneWittenCorpus.fromDirectory(new File("/home/max/spotlight-data/milne-witten"))
+    //AnnotatedTextSource.fromOccurrencesFile(new File("/home/max/spotlight-data/CSAWoccs.red-dis-3.7-sorted.tsv")))
+  }
 
     def main(args: Array[String]) {
         evalSpotting(MilneWittenCorpus.fromDirectory(new File("/home/max/spotlight-data/milne-witten")))
@@ -52,38 +55,61 @@ object EvalSpotter {
         }
         val lingPipeSpotter: Spotter = new LingPipeSpotter(dictionary, analyzer)
 
-        // eval
-        var actual = Set[SurfaceFormOccurrence]()
-        for (paragraph <- annotatedTextSource) {
-            actual = JavaConversions.asScalaBuffer(lingPipeSpotter.extract(paragraph.text)).toSet union actual
-        }
+  def getExpectedResult(annotatedTextSource: AnnotatedTextSource) = {
+    annotatedTextSource.foldLeft(Set[SurfaceFormOccurrence]()){ (set, par) =>
+      set ++ par.occurrences.map(Factory.SurfaceFormOccurrence.from(_))
+    }
+  }
+
+  def evalSpotter(annotatedTextSource: AnnotatedTextSource,
+                  spotter: Spotter,
+                  expected: Traversable[SurfaceFormOccurrence]) {
+
+    // run spotting
+    var actual = Set[SurfaceFormOccurrence]()
+    for (paragraph <- annotatedTextSource) {
+      actual = JavaConversions.asScalaBuffer(spotter.extract(paragraph.text)).toSet union actual
+    }
+
+    // compare
+    printResults("%s and corpus %s".format(spotter.getName, annotatedTextSource.name), expected, actual)
+  }
+
+
+  private def evalSpotting(annotatedTextSource: AnnotatedTextSource,
+                           indexSpotter: Traversable[SurfaceForm] => Spotter,
+                           expected: Traversable[SurfaceFormOccurrence]) {
+    // index spotter
+    val spotter = indexSpotter(expected.map(_.surfaceForm))
 
         printResults("LingPipeSpotter with %s and corpus %s".format(analyzer.getClass, annotatedTextSource.name),
             expected, actual)
     }
 
-    def printResults(description: String, expected: Set[SurfaceFormOccurrence], actual: Set[SurfaceFormOccurrence]) {
-        var truePositive = 0
-        var falseNegative = 0
-        for (e <- expected) {
-            if (actual contains e) {
-                truePositive += 1
-            } else {
-                falseNegative += 1
-                LOG.debug("false negative: " + e)
-            }
-        }
-        val falsePositive = actual.size - truePositive
+    // compare
+    printResults("%s and corpus %s".format(spotter.getName, annotatedTextSource.name), expected, actual)
+  }
 
-        val precision = truePositive.toDouble / (truePositive + falseNegative)
-        val recall = truePositive.toDouble / (truePositive + falsePositive)
-
-        LOG.info(description)
-        LOG.info("           | actual Y  | actual N")
-        LOG.info("expected Y |   %3d     |    %3d".format(truePositive, falseNegative))
-        LOG.info("expected N |   %3d     |    N/A".format(falsePositive))
-        LOG.info("precision: %f  recall: %f".format(precision, recall))
-        LOG.info("--------------------------------")
+  private def printResults(description: String, expected: Traversable[SurfaceFormOccurrence], actual: Set[SurfaceFormOccurrence]) {
+    var truePositive = 0
+    var falseNegative = 0
+    for (e <- expected) {
+      if (actual contains e) {
+        truePositive += 1
+      } else {
+        falseNegative += 1
+        SpotlightLog.debug(this.getClass, "false negative: %s", e)
+      }
     }
+    val falsePositive = actual.size - truePositive
 
+    val precision = truePositive.toDouble / (truePositive + falseNegative)
+    val recall = truePositive.toDouble / (truePositive + falsePositive)
+    SpotlightLog.info(this.getClass, description)
+    SpotlightLog.info(this.getClass, "           | actual Y  | actual N")
+    SpotlightLog.info(this.getClass, "expected Y |   %3d     |    %3d", truePositive, falseNegative)
+    SpotlightLog.info(this.getClass, "expected N |   %3d     |    N/A", falsePositive)
+    SpotlightLog.info(this.getClass, "precision: %f  recall: %f", precision, recall)
+    SpotlightLog.info(this.getClass, "--------------------------------")
+  }
 }
