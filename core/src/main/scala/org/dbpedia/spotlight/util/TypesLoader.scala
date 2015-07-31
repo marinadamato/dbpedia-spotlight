@@ -99,7 +99,7 @@ object TypesLoader
     }
 
   def getTitlesMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
-    LOG.info("Loading titles map...")
+    SpotlightLog.info(this.getClass, "Loading titles map...")
     var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
     var i = 0;
     // CAUTION: this assumes that the most specific type is listed last
@@ -115,13 +115,13 @@ object TypesLoader
         titlesMap = titlesMap.updated(resource.uri, titleList)
       }
     }
-    LOG.info("Done. Loaded %d titles.".format(i))
+    SpotlightLog.info(this.getClass, "Done. Loaded %d titles.".format(i))
     titlesMap
   }
 
   def getImagesMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
     println("fede2")
-    LOG.info("Loading images map...")
+    SpotlightLog.info(this.getClass, "Loading images map...")
     var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
     var i = 0;
     // CAUTION: this assumes that the most specific type is listed last
@@ -137,13 +137,13 @@ object TypesLoader
         titlesMap = titlesMap.updated(resource.uri, titleList)
       }
     }
-    LOG.info("Done. Loaded %d images.".format(i))
+   SpotlightLog.info(this.getClass, "Done. Loaded %d images.".format(i))
     titlesMap
   }
 
   def getImagesMap_italian_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
     println("fede2")
-    LOG.info("Loading italian images map...")
+    SpotlightLog.info(this.getClass, "Loading italian images map...")
     var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
     var i = 0;
     // CAUTION: this assumes that the most specific type is listed last
@@ -159,14 +159,14 @@ object TypesLoader
         titlesMap = titlesMap.updated(resource.uri, titleList)
       }
     }
-    LOG.info("Done. Loaded %d images.".format(i))
+    SpotlightLog.info(this.getClass, "Done. Loaded %d images.".format(i))
     titlesMap
   }
 
 
   def getSomeAsMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
     println("fede2")
-    LOG.info("Loading someAs map...")
+    SpotlightLog.info(this.getClass, "Loading someAs map...")
     var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
     var i = 0;
     // CAUTION: this assumes that the most specific type is listed last
@@ -182,7 +182,7 @@ object TypesLoader
         titlesMap = titlesMap.updated(resource.uri, titleList)
       }
     }
-    LOG.info("Done. Loaded %d someAs.".format(i))
+    SpotlightLog.info(this.getClass, "Done. Loaded %d someAs.".format(i))
     titlesMap
   }
     
