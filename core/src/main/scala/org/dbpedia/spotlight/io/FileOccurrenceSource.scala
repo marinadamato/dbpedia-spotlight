@@ -156,7 +156,7 @@ object FileOccurrenceSource
                 }
                 else {
                     //throw new ParseException("line must have 4 tab separators; got "+(elements.length-1)+" in line: "+line, elements.length-1)
-                    SpotlightLog.error(this.getClass, "line must have 4 tab separators; got %d in line: %d", elements.length-1, line)
+                    //SpotlightLog.error(this.getClass, "line must have 4 tab separators; got %d in line: %d", elements.length-1, line) Comment added by @giuseppefutia
                 }
 
             }
