@@ -18,11 +18,10 @@ package org.dbpedia.spotlight.io
 
 import org.dbpedia.spotlight.model._
 import io.Source
-import org.apache.commons.logging.LogFactory
+import org.dbpedia.spotlight.log.SpotlightLog
 import java.io._
 import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 import java.text.ParseException
-import java.net.URLEncoder
 
 /**
  * Gets DBpediaResourceOccurrences from TSV files.
@@ -30,8 +29,6 @@ import java.net.URLEncoder
 
 object FileOccurrenceSource
 {
-    private val LOG = LogFactory.getLog(this.getClass)
-
     /**
      * Creates an DBpediaResourceOccurrence Source from a TSV file.
      */
@@ -47,7 +44,7 @@ object FileOccurrenceSource
      */
     def writeToFile(occSource : Traversable[DBpediaResourceOccurrence], tsvFile : File) {
         var indexDisplay = 0
-        LOG.info("Writing occurrences to file "+tsvFile+" ...")
+        SpotlightLog.info(this.getClass, "Writing occurrences to file %s ...", tsvFile)
 
         var o : OutputStream = new FileOutputStream(tsvFile)
         if (tsvFile.getName.endsWith(".gz")) {
@@ -60,12 +57,12 @@ object FileOccurrenceSource
 
             indexDisplay += 1
             if (indexDisplay % 100000 == 0) {
-                LOG.info("  saved " + indexDisplay + " occurrences")
+                SpotlightLog.info(this.getClass, "  saved %d occurrences", indexDisplay)
             }
         }
         outStream.close
 
-        LOG.info("Finished: saved " + indexDisplay + " occurrences to file")
+        SpotlightLog.info(this.getClass, "Finished: saved %d occurrences to file", indexDisplay)
     }
 
 
@@ -74,7 +71,7 @@ object FileOccurrenceSource
      */
     def addToFile(defSource : WikiPageSource, tsvFile : File) {
         var indexDisplay = 0
-        LOG.info("Writing wiki page text to file "+tsvFile+" ...")
+        SpotlightLog.info(this.getClass, "Writing wiki page text to file %s ...", tsvFile)
 
         var o : OutputStream = new FileOutputStream(tsvFile)
         if (tsvFile.getName.endsWith(".gz")) {
@@ -87,12 +84,12 @@ object FileOccurrenceSource
 
             indexDisplay += 1
             if (indexDisplay % 100000 == 0) {
-                LOG.info("  saved " + indexDisplay + " wiki page texts")
+                SpotlightLog.info(this.getClass, "  saved %d wiki page texts", indexDisplay)
             }
         }
         outStream.close
 
-        LOG.info("Finished: saved " + indexDisplay + " wiki page texts to file")
+        SpotlightLog.info(this.getClass, "Finished: saved %d wiki page texts to file", indexDisplay)
     }
 
     /**
@@ -126,8 +123,8 @@ object FileOccurrenceSource
                 if (elements.length == 5) {
                     val id = elements(0)
 
-                  /*
-                  //MODIFIED: if you want to build the English version of TellMeFirst indexes you have to uncomment these lines
+		/*
+                    //MODIFIED: if you want to build the English version of TellMeFirst indexes you have to uncomment these lines
                     val encodedURI = URLEncoder.encode(elements(1), "UTF-8")
                     val cleanedURI = encodedURI
                         .replace("%24", "$")
@@ -147,11 +144,10 @@ object FileOccurrenceSource
                         .replace("%2F", "/")
                         .replace("%3A", ":")
 
-                    val res = new DBpediaResource(cleanedURI, 1)*/
+                    val res = new DBpediaResource(cleanedURI, 1)
+		*/
 
                     val res = new DBpediaResource(elements(1), 1) // support is at least one if this resource has been seen once here
-
-
                     val sf = new SurfaceForm(elements(2))
                     val t = new Text(elements(3))
                     val offset = elements(4).toInt
@@ -160,7 +156,7 @@ object FileOccurrenceSource
                 }
                 else {
                     //throw new ParseException("line must have 4 tab separators; got "+(elements.length-1)+" in line: "+line, elements.length-1)
-                    LOG.error("line must have 4 tab separators; got "+(elements.length-1)+" in line: "+line)
+                    //SpotlightLog.error(this.getClass, "line must have 4 tab separators; got %d in line: %d", elements.length-1, line) Comment added by @giuseppefutia
                 }
 
             }

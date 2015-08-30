@@ -3,33 +3,30 @@ package org.dbpedia.spotlight.db.io
 import io.Source
 import java.io.{File, FileInputStream, InputStream}
 import org.dbpedia.spotlight.model.Factory.OntologyType
-import collection.immutable.HashMap
 import scala.collection.JavaConverters._
 import java.util.NoSuchElementException
 import scala.collection.mutable.HashSet
-import org.dbpedia.spotlight.lucene.index.ExtractOccsFromWikipedia._
-import org.dbpedia.spotlight.filter.occurrences.RedirectResolveFilter
 import org.dbpedia.spotlight.db.WikipediaToDBpediaClosure
-import org.apache.commons.logging.LogFactory
+import org.dbpedia.spotlight.log.SpotlightLog
 import scala.Predef._
 import scala.Array
 import org.dbpedia.spotlight.model._
-import collection.parallel.mutable
 import org.dbpedia.spotlight.exceptions.NotADBpediaResourceException
+import org.semanticweb.yars.nx.parser.NxParser
+
+import org.dbpedia.extraction.util.WikiUtil
 
 
 /**
- * @author Joachim Daiber
+ * Represents a source of DBpediaResources.
  *
- */
-
-/**
- * Represents a source of DBpediaResources
+ * Type definitions must be prepared beforehand, see
+ *  src/main/scripts/types.sh
+ *
+ * @author Joachim Daiber
  */
 
 object DBpediaResourceSource {
-
-  private val LOG = LogFactory.getLog(this.getClass)
 
   def fromTSVInputStream(
     conceptList: InputStream,
@@ -73,31 +70,51 @@ object DBpediaResourceSource {
         }
       }
     }
-    LOG.warn("URI for %d type definitions not found!".format(uriNotFound.size) )
+    SpotlightLog.warn(this.getClass, "URI for %d type definitions not found!", uriNotFound.size)
 
     resourceMap.iterator.map( f => Pair(f._2, f._2.support) ).toMap.asJava
   }
 
+
+  /**
+   * Normalize the URI resulting from Pig to a format useable for us.
+   * At the moment, the Pig URIs are in DBpedia format but double-encoded.
+   *
+   * @param uri the DBpedia URI returned by Pig
+   * @return
+   */
+  def normalizePigURI(uri: String) = {
+    try {
+      //This seems a bit over the top (this is necessary because of the format of the data as it comes from pignlproc):
+      WikiUtil.wikiEncode(WikiUtil.wikiDecode(WikiUtil.wikiDecode(uri)))
+    } catch {
+      case e: Exception => println("Conversion to correct URI format failed at %s".format(uri)); uri
+    }
+
+  }
+
+
   def fromPigInputStreams(
     wikipediaToDBpediaClosure: WikipediaToDBpediaClosure,
     resourceCounts: InputStream,
-    instanceTypes: InputStream
+    instanceTypes: (String, InputStream),
+    namespace: String
   ): java.util.Map[DBpediaResource, Int] = {
 
-    LOG.info("Creating DBepdiaResourceSource.")
+    SpotlightLog.info(this.getClass, "Creating DBepdiaResourceSource.")
 
     var id = 1
 
     val resourceMap = new java.util.HashMap[DBpediaResource, Int]()
     val resourceByURI = scala.collection.mutable.HashMap[String, DBpediaResource]()
 
-    LOG.info("Reading resources+counts...")
+    SpotlightLog.info(this.getClass, "Reading resources+counts...")
 
     Source.fromInputStream(resourceCounts).getLines() foreach {
       line: String => {
         try {
           val Array(wikiurl, count) = line.trim().split('\t')
-          val res = new DBpediaResource(wikipediaToDBpediaClosure.wikipediaToDBpediaURI(wikiurl))
+          val res = new DBpediaResource(wikipediaToDBpediaClosure.wikipediaToDBpediaURI(normalizePigURI(wikiurl)))
 
           resourceByURI.get(res.uri) match {
             case Some(oldRes) => {
@@ -113,28 +130,56 @@ object DBpediaResourceSource {
           }
         } catch {
           case e: NotADBpediaResourceException => //Ignore Disambiguation pages
+          case e: scala.MatchError => //Ignore lines with multiple tabs
         }
 
       }
     }
 
     //Read types:
-    LOG.info("Reading types...")
-    val uriNotFound = HashSet[String]()
-    Source.fromInputStream(instanceTypes).getLines() foreach {
-      line: String => {
-        val Array(uri: String, typeURI: String) = line.trim().split('\t')
+    if (instanceTypes != null && instanceTypes._1.equals("tsv")) {
+      SpotlightLog.info(this.getClass, "Reading types (tsv format)...")
+      val uriNotFound = HashSet[String]()
+      Source.fromInputStream(instanceTypes._2).getLines() foreach {
+        line: String => {
+          val Array(uri: String, typeURI: String) = line.trim().split('\t')
 
-        try {
-          resourceByURI(new DBpediaResource(uri).uri).types ::= OntologyType.fromURI(typeURI)
-        } catch {
-          case e: java.util.NoSuchElementException =>
-            uriNotFound += uri
+          try {
+            resourceByURI(new DBpediaResource(uri).uri).types ::= OntologyType.fromURI(typeURI)
+          } catch {
+            case e: java.util.NoSuchElementException =>
+              uriNotFound += uri
+          }
         }
       }
+      SpotlightLog.warn(this.getClass, "URI for %d type definitions not found!".format(uriNotFound.size) )
+      SpotlightLog.info(this.getClass, "Done.")
+    } else if (instanceTypes != null && instanceTypes._1.equals("nt")) {
+      SpotlightLog.info(this.getClass, "Reading types (nt format)...")
+
+      val uriNotFound = HashSet[String]()
+
+      val redParser = new NxParser(instanceTypes._2)
+      while (redParser.hasNext) {
+        val triple = redParser.next
+        val subj = triple(0).toString.replace(namespace, "")
+
+        if (!subj.contains("__")) {
+          val obj  = triple(2).toString.replace(namespace, "")
+
+          try {
+            if(!obj.endsWith("owl#Thing"))
+              resourceByURI(new DBpediaResource(subj).uri).types ::= OntologyType.fromURI(obj)
+          } catch {
+            case e: java.util.NoSuchElementException =>
+              uriNotFound += subj
+          }
+        }
+
+      }
+      SpotlightLog.info(this.getClass, "URI for %d type definitions not found!".format(uriNotFound.size) )
+      SpotlightLog.info(this.getClass, "Done.")
     }
-    LOG.warn("URI for %d type definitions not found!".format(uriNotFound.size) )
-    LOG.info("Done.")
 
     resourceByURI foreach {
       case (_, res) => resourceMap.put(res, res.support)
@@ -147,11 +192,19 @@ object DBpediaResourceSource {
   def fromPigFiles(
     wikipediaToDBpediaClosure: WikipediaToDBpediaClosure,
     counts: File,
-    instanceTypes: File
+    instanceTypes: File,
+    namespace: String
   ): java.util.Map[DBpediaResource, Int] = fromPigInputStreams(
     wikipediaToDBpediaClosure,
     new FileInputStream(counts),
-    new FileInputStream(instanceTypes)
+    if(instanceTypes == null)
+      null
+    else
+      (
+        if(instanceTypes.getName.endsWith("nt")) "nt" else "tsv",
+        new FileInputStream(instanceTypes)
+      ),
+    namespace
   )
 
 

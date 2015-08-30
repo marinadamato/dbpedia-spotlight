@@ -37,16 +37,27 @@ class SurfaceForm(var name : String) extends Serializable
 
   name = WikiUtil.cleanSpace(name)
 
-  //TODO: instead of equalsIgnoreCase, fix the Spotter // (should be fixed now)
-  override def equals(that : Any) = {
+  override def equals(that: Any) = {
     that match {
-      case t: SurfaceForm => name.equalsIgnoreCase(that.asInstanceOf[SurfaceForm].name)
+      case t: SurfaceForm => name.equals(that.asInstanceOf[SurfaceForm].name)
       case _ => false
     }
   }
 
-  override def hashCode() : Int = {
+  override def hashCode(): Int = {
     (if (name != null) name.hashCode else 0)
+  }
+
+  def annotationProbability: Double = {
+
+    //TODO: THIS IS HACKISH -> Since we only get the total counts for ngrams (e.g. with n = 5), not
+    // all surface forms have a total count. However, it is reasonable that long sf matches are usually
+    // annotated, therefore this 1.0
+
+    if (totalCount == -1)
+      1.0
+    else
+      annotatedCount / totalCount.toDouble
   }
 
   override def toString = "SurfaceForm["+name+"]"
