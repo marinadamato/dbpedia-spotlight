@@ -1,0 +1,7 @@
+[{
+"description": "Get all places for DBpedia class of its own ontology",
+"endpoint": "http://dbpedia.org/sparql",
+"query": "SELECT ?entity WHERE { ?entity a <http://dbpedia.org/ontology/Place>}",
+"domain": "POIs",
+"language": "en"
+}]
