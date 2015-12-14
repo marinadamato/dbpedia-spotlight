@@ -36,7 +36,7 @@ public class TMFDomainEngine {
             Boolean appended = true;
             while (appended) {
                 appended = appendEntities(writer, tmfDomainQuery.getEntities(offset));
-                offset += 10000; // This is the number the default number of rows returned by online endpoints
+                offset += 10000; // This is the default number of rows returned by online endpoints
             }
         }
         writer.close();
