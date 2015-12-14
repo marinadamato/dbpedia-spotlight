@@ -6,9 +6,11 @@ import java.util.List;
 import com.hp.hpl.jena.query.*;
 
 /**
- * This class executes a general query to a SPARQL endpoint to retrieve
- * domain entities specified in a configuration file and publish them
- * on a domain endpoint
+ *
+ * This class executes a general SPARQL query to an endpoint
+ * It retrieves domain entities specified in a configuration
+ * It publishes the RDF representation on a domain endpoint
+ *
  */
 public class TMFDomainQuery {
 
@@ -20,11 +22,18 @@ public class TMFDomainQuery {
         sparqlEndpoint = endpoint;
     }
 
-    public List getEntities() {
+    public List getEntities(int offset) {
         List entitiesList = new ArrayList();
-        Query query = QueryFactory.create(sparqlQuery);
+        Query query = QueryFactory.create(sparqlQuery + " OFFSET " + offset);
+
+        // TODO Add info to the standard output
+
+        System.out.println(query);
+
+
         QueryExecution qexec = QueryExecutionFactory.sparqlService(sparqlEndpoint, query);
         ResultSet results = qexec.execSelect();
+
         while (results.hasNext()) {
             QuerySolution result = results.next();
 
@@ -36,12 +45,17 @@ public class TMFDomainQuery {
 
             entitiesList.add(result.get("entity").toString());
         }
+
         qexec.close();
         return entitiesList;
     }
 
+    private static void getRDFRepresentation(int offset) {
+        // TODO
+    }
+
     public void publishOnEndpoint() {
-        /// TODO Define a specific implementation for BlazeGraph triple store.
+        // TODO Define a specific implementation for BlazeGraph triple store.
         // TODO Publish through HTTP
 
     }
