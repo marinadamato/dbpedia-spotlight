@@ -28,10 +28,9 @@ public class TMFDomainQuery {
 
         // TODO Add info to the standard output
 
-        System.out.println(query);
-
 
         QueryExecution qexec = QueryExecutionFactory.sparqlService(sparqlEndpoint, query);
+
         ResultSet results = qexec.execSelect();
 
         while (results.hasNext()) {
