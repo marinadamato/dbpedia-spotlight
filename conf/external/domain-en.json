@@ -40,11 +40,4 @@
 	"domain": "POIs",
 	"language": "en",
 	"baseuri": "http://dbpedia.org/resource/"
-}, {
-	"description": "Get all umbel place from DBpedia",
-	"endpoint": "http://dbpedia.org/sparql",
-	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://umbel.org/umbel/rc/Place>} LIMIT 10000",
-	"domain": "POIs",
-	"language": "en",
-	"baseuri": "http://dbpedia.org/resource/"
 }]
