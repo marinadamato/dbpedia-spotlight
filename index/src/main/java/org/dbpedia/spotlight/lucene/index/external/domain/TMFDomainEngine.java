@@ -2,6 +2,8 @@ package org.dbpedia.spotlight.lucene.index.external.domain;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -10,10 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  *
@@ -35,8 +34,6 @@ public class TMFDomainEngine {
         String domainLoggerPath = config.getProperty("tellmefirst.domain.logger", "").trim();
         String domainEntitiesPath = config.getProperty("org.dbpedia.spotlight.data.conceptURIs", "").trim();
 
-        List allEntitiesList = new ArrayList();
-
         JSONReader jsonReader = new JSONReader(domainConfPath);
         String json = jsonReader.readJSON();
         ObjectMapper mapper = new ObjectMapper();
@@ -51,7 +48,6 @@ public class TMFDomainEngine {
         logger = Files.newBufferedWriter(dstLogger, StandardCharsets.UTF_8);
 
         for(JsonNode node : root) {
-            int oldNumberOfEntities = allEntitiesList.size();
 
             logger.write("Query description: " + getValue("description", node));
             LOG.info("Query description: " + getValue("description", node));
@@ -61,50 +57,88 @@ public class TMFDomainEngine {
             LOG.info("Language: " + getValue("language", node));
             logger.newLine();
 
-            logger.write("Number of entities: " + oldNumberOfEntities);
-            LOG.info("Number of entities: " + oldNumberOfEntities);
-            logger.newLine();
-
             TMFDomainQuery tmfDomainQuery = new TMFDomainQuery(getValue("query", node), getValue("endpoint", node));
             int offset = 0;
-            Boolean appended = true;
+            int appended = 0;
+            int totalAppended = 0;
 
-            while (appended) {
+            appended = appendEntities(writer, tmfDomainQuery.getEntities(offset), getValue("baseuri", node)); // Do it at least once
 
+            while (appended != 0) {
                 // TODO Add try/catch
-                appended = appendEntities(writer, allEntitiesList, tmfDomainQuery.getEntities(offset), getValue("baseuri", node));
+                appended = appendEntities(writer, tmfDomainQuery.getEntities(offset), getValue("baseuri", node));
+                totalAppended += appended;
                 offset += 10000; // This is the default number of rows returned by online endpoints
             }
 
-            int numOfAddedEntities = allEntitiesList.size() - oldNumberOfEntities;
-            logger.write("Added " + numOfAddedEntities + " entities");
-            LOG.info("Added " + numOfAddedEntities + " entities");
+            logger.write("Number of entities retrieved with query: " + totalAppended);
+            LOG.info("Number of entities retrieved with query: " + totalAppended + "\n\n");
             logger.newLine();
+
+            logger.write("Removing duplicates");
+            LOG.info("Removing duplicates");
+            logger.newLine();
+            stripDuplicatesFromFile(domainEntitiesPath);
+
+            logger.write("Get RDF representation of entities...");
+            LOG.info("Get RDF representation of entities...");
+            logger.newLine();
+            Model model = getRDF(tmfDomainQuery, domainEntitiesPath, node);
+
         }
         logger.close();
         writer.close();
     }
 
-    private static Boolean appendEntities(BufferedWriter writer,
-                                          List allEntitiesList,
+    private static int appendEntities(BufferedWriter writer,
                                           List entitiesList,
                                           String baseuri) throws IOException {
 
-        Boolean appended = false;
+        int appended = 0;
         Iterator<String> iterator = entitiesList.iterator();
         while (iterator.hasNext()) {
             String entity = iterator.next();
-            if (!allEntitiesList.contains(entity)) {
-                allEntitiesList.add(entity);
-                writer.write(entity.split(baseuri)[1]);
-                writer.newLine();
-                appended = true;
-            }
+            writer.write(entity.split(baseuri)[1]);
+            writer.newLine();
+            appended += 1;
         }
         return appended;
+    }
+
+    private static Model getRDF(TMFDomainQuery tmfDomainQuery, String entitiesListPath, JsonNode node) throws IOException {
+        Model model = ModelFactory.createDefaultModel();
+        String endpoint = getValue("endpoint", node);
+        String baseuri = getValue("baseuri", node);
+        BufferedReader reader = new BufferedReader(new FileReader(entitiesListPath));
+        String entity;
+        while(true) {
+            entity = reader.readLine();
+            if(entity == null)
+                break;
+            model.add(tmfDomainQuery.getRDFRepresentation(entity, baseuri, endpoint));
+        }
+        return model;
+    }
+
+    public static void stripDuplicatesFromFile(String filename) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        Set<String> lines = new HashSet<String>(100000);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            lines.add(line);
+        }
+        reader.close();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        for (String unique : lines) {
+            writer.write(unique);
+            writer.newLine();
+        }
+        writer.close();
     }
 
     private static String getValue (String string, JsonNode record) {
         return record.get(string) != null ? record.get(string).asText() : "";
     }
+
+
 }

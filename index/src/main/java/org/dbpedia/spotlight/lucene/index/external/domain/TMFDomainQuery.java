@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hp.hpl.jena.query.*;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.RDFReader;
+import com.hp.hpl.jena.util.FileManager;
 
 /**
  *
@@ -25,35 +28,23 @@ public class TMFDomainQuery {
     public List getEntities(int offset) {
         List entitiesList = new ArrayList();
         Query query = QueryFactory.create(sparqlQuery + " OFFSET " + offset);
-
-        // TODO Add info to the standard output
-
-
         QueryExecution qexec = QueryExecutionFactory.sparqlService(sparqlEndpoint, query);
-
         ResultSet results = qexec.execSelect();
-
         while (results.hasNext()) {
             QuerySolution result = results.next();
-
-            // TODO Understand if you get all results from the endpoint SPARQL
-
-            // TODO Remember that you want to get an RDF representation of each entity
-
-            // TODO Check if you have to clean
-
             entitiesList.add(result.get("entity").toString());
         }
-
         qexec.close();
         return entitiesList;
     }
 
-    private static void getRDFRepresentation(int offset) {
-        // TODO
+    public static Model getRDFRepresentation(String entity, String baseuri, String endpoint) {
+        FileManager fileManager = new FileManager();
+        Model describeModel = fileManager.loadModel(baseuri + entity + ".rdf");
+        return describeModel;
     }
 
-    public void publishOnEndpoint() {
+    public void publishOnEndpoint(String endpoint) {
         // TODO Define a specific implementation for BlazeGraph triple store.
         // TODO Publish through HTTP
 
