@@ -195,6 +195,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>eu.fusepool.p3.transformer</groupId>
+            <artifactId>domain-services</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.dbpedia.spotlight</groupId>
             <artifactId>core</artifactId>
         </dependency>

@@ -53,6 +53,7 @@
         <module>uima</module>
         <module>dist</module>
         <module>rest-tomcat</module>
+        <module>domain-services</module>
     </modules>
 
     <build>
