@@ -34,9 +34,13 @@ cd ../index
 # extract valid URIs, synonyms and surface forms from DBpedia
 #mvn scala:run -Dlauncher=ExtractCandidateMap "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE"
 
-# get domain entities through SPARQL queries
+# pull up domain services
 mvn compile
-mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.domain.TMFDomainEngine" -Dexec.args=$INDEX_CONFIG_FILE
+mvn exec:java -e -Dexec.mainClass="eu.fusepool.p3.transformer.LDRService" -Dexec.args="$INDEX_CONFIG_FILE"
+
+# get domain entities through SPARQL queries
+#mvn compile
+#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.domain.TMFDomainEngine" -Dexec.args=$INDEX_CONFIG_FILE
 
 # decode URIs of the extracted files from the 3.9 version of DBpedia (added by Giuseppe Futia)
 #mvn compile

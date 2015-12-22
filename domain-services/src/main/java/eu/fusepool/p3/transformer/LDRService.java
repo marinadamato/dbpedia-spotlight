@@ -3,20 +3,22 @@ package eu.fusepool.p3.transformer;
 import eu.fusepool.p3.transformer.commons.Entity;
 import eu.fusepool.p3.transformer.commons.util.WritingEntity;
 import eu.fusepool.p3.transformer.server.TransformerServer;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -42,11 +44,9 @@ public class LDRService implements SyncTransformer {
 
     private static final MimeType MIME_TEXT_PLAIN = mimeType("text", "plain");
 
-    @Option(name = "-p", aliases = {"--port"}, usage = "set the port to which to bind to", metaVar = "7100", required = false)
-    private final int fPort = 7101;
+    private static final Transformer fType = Transformer.sync;
 
-    @Option(name = "-t", aliases = {"--type"}, usage = "specify transformer type (sync, async), default: sync", metaVar = "sync", required = false)
-    private final Transformer fType = Transformer.sync;
+    private static String ldrEndpoint;
 
     @SuppressWarnings("serial")
     private static final Set<MimeType> INPUT_FORMATS = Collections
@@ -69,13 +69,26 @@ public class LDRService implements SyncTransformer {
 
     @Override
     public Entity transform(HttpRequestEntity entity) throws IOException {
-        InputStream inputData = entity.getData();
-
         // Put the implementation of your service here here
-
-        final String transformed = "";
         fLogger.info("Get new entities with SoftEng Linked Data Recommender");
+        String inputData = IOUtils.toString(entity.getData());
 
+        // TODO Manage different kind or requests
+
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet(ldrEndpoint + "?uri=" + inputData );
+        HttpResponse response = client.execute(request);
+        HttpEntity responseEntity = response.getEntity();
+
+        String transformed = "";
+        if (responseEntity != null) {
+            InputStream inputStream = responseEntity.getContent();
+            try {
+                transformed = IOUtils.toString(inputStream, "UTF-8");
+            } finally {
+                //TODO
+            }
+        }
         return wrapInEntity(transformed);
     }
 
@@ -128,27 +141,23 @@ public class LDRService implements SyncTransformer {
         }
     }
 
-    public void _main(String[] args) throws Exception {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            parser.printUsage(System.out);
-            System.exit(-1);
-        }
+    public static void main(String[] args) throws Exception {
+        Properties config = new Properties();
+        String confFile = args[0];
+        config.load(new FileInputStream(new File(confFile)));
+        ldrEndpoint = config.getProperty("tellmefirst.domain.LDRService", "").trim();
+        int fPort = Integer.parseInt(config.getProperty("tellmefirst.domain.LDRService.port", "").trim());
 
         TransformerServer server = new TransformerServer(fPort, false);
-        if (fType.equals(Transformer.sync))
+        if (fType.equals(Transformer.sync)) {
             server.start(new LDRService());
+            fLogger.info("SoftEng Linked Data Recommender is up!");
+        }
         try {
             server.join();
         } catch (InterruptedException ex) {
             fLogger.error("Internal error: ", ex);
             Thread.currentThread().interrupt();
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        new LDRService()._main(args);
     }
 }
