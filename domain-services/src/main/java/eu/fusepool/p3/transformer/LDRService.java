@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
-import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.util.Collections;
 import java.util.HashSet;
@@ -106,30 +105,9 @@ public class LDRService implements SyncTransformer {
         };
     }
 
-    private String checkedGet(HttpRequestEntity entity, String parameter) {
-        String par = entity.getRequest().getParameter(parameter);
-        // If there's no regex, throws Exception
-        if (par == null) {
-            throw new RuntimeException("Missing parameter " + parameter + ".");
-        }
-        return par;
-    }
-
     @Override
     public boolean isLongRunning() {
         return false;
-    }
-
-    private String charsetOf(HttpServletRequest request) {
-
-        String encoding = request.getCharacterEncoding();
-
-        if (encoding == null) {
-            fLogger.error("Cannot resolve encoding " + encoding + ". Defaulting to US-ASCII.");
-            encoding = "US-ASCII";
-        }
-
-        return encoding;
     }
 
     private static MimeType mimeType(String primary, String sub) {
