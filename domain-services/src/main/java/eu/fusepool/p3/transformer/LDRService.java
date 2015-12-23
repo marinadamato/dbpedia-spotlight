@@ -74,20 +74,8 @@ public class LDRService implements SyncTransformer {
 
         // TODO Manage different kind or requests
 
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet(ldrEndpoint + "?uri=" + inputData );
-        HttpResponse response = client.execute(request);
-        HttpEntity responseEntity = response.getEntity();
-
-        String transformed = "";
-        if (responseEntity != null) {
-            InputStream inputStream = responseEntity.getContent();
-            try {
-                transformed = IOUtils.toString(inputStream, "UTF-8");
-            } finally {
-                //TODO
-            }
-        }
+        HttpClientWrapper httpClientWrapper = new HttpClientWrapper();
+        String transformed = httpClientWrapper.executeRequest(ldrEndpoint + "?uri=" + inputData);
         return wrapInEntity(transformed);
     }
 
