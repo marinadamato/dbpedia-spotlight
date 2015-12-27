@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.dbpedia.spotlight.LDRClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -23,9 +24,11 @@ public class TMFDomainEngine {
 
     final static Log LOG = LogFactory.getLog(TMFDomainEngine.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         LOG.info("Start to get domain entities...");
+
+        // TODO Maybe you need to simplify this tool
 
         Properties config = new Properties();
         String confFile = args[0];
@@ -33,6 +36,7 @@ public class TMFDomainEngine {
         String domainConfPath = config.getProperty("tellmefirst.domain.conf", "").trim();
         String domainLoggerPath = config.getProperty("tellmefirst.domain.logger", "").trim();
         String domainEntitiesPath = config.getProperty("org.dbpedia.spotlight.data.conceptURIs", "").trim();
+        String ldrEndpoint = config.getProperty("tellmefirst.domain.LDRService").trim();
 
         JSONReader jsonReader = new JSONReader(domainConfPath);
         String json = jsonReader.readJSON();
@@ -80,9 +84,15 @@ public class TMFDomainEngine {
             logger.newLine();
             stripDuplicatesFromFile(domainEntitiesPath);
 
+            logger.write("Get categories with the Linked Data Recommender");
+            LOG.info("Get categories with the Linked Data Recommender");
+            logger.newLine();
+            getDomainEntities(ldrEndpoint, domainEntitiesPath, node);
+
             logger.write("Get RDF representation of entities...");
             LOG.info("Get RDF representation of entities...");
             logger.newLine();
+
             Model model = getRDF(tmfDomainQuery, domainEntitiesPath, node);
 
         }
@@ -93,7 +103,6 @@ public class TMFDomainEngine {
     private static int appendEntities(BufferedWriter writer,
                                           List entitiesList,
                                           String baseuri) throws IOException {
-
         int appended = 0;
         Iterator<String> iterator = entitiesList.iterator();
         while (iterator.hasNext()) {
@@ -120,6 +129,23 @@ public class TMFDomainEngine {
         return model;
     }
 
+    private static void getDomainEntities(String ldrEndpoint, String filename, JsonNode node) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        String baseuri = getValue("baseuri", node);
+
+        String[] clientParameters = new String[2];
+        clientParameters[0] = baseuri;
+
+        LDRClient ldrClient = new LDRClient(ldrEndpoint);
+
+        String uri = reader.readLine();
+        while (uri != null) {
+            clientParameters[1] = uri;
+            ldrClient.getDomainEntities(clientParameters);
+        }
+        reader.close();
+    }
+
     public static void stripDuplicatesFromFile(String filename) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         Set<String> lines = new HashSet<String>(100000);
@@ -139,6 +165,4 @@ public class TMFDomainEngine {
     private static String getValue (String string, JsonNode record) {
         return record.get(string) != null ? record.get(string).asText() : "";
     }
-
-
 }
