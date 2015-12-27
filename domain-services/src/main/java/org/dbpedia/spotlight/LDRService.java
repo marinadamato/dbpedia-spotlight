@@ -1,14 +1,11 @@
-package eu.fusepool.p3.transformer;
+package org.dbpedia.spotlight;
 
+import eu.fusepool.p3.transformer.HttpRequestEntity;
+import eu.fusepool.p3.transformer.SyncTransformer;
 import eu.fusepool.p3.transformer.commons.Entity;
 import eu.fusepool.p3.transformer.commons.util.WritingEntity;
 import eu.fusepool.p3.transformer.server.TransformerServer;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

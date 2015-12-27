@@ -1,4 +1,4 @@
-package eu.fusepool.p3.transformer;
+package org.dbpedia.spotlight;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
