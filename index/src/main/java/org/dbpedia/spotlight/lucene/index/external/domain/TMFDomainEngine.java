@@ -132,16 +132,14 @@ public class TMFDomainEngine {
     private static void getDomainEntities(String ldrEndpoint, String filename, JsonNode node) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         String baseuri = getValue("baseuri", node);
-
         String[] clientParameters = new String[2];
         clientParameters[0] = baseuri;
-
         LDRClient ldrClient = new LDRClient(ldrEndpoint);
-
         String uri = reader.readLine();
         while (uri != null) {
             clientParameters[1] = uri;
             ldrClient.getDomainEntities(clientParameters);
+            uri = reader.readLine();
         }
         reader.close();
     }
