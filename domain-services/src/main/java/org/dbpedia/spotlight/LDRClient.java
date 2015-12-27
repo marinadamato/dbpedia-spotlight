@@ -26,19 +26,16 @@ public class LDRClient implements DomainServiceClient{
         return entitiesList;
     }
 
-    public List getCategories(String baseuri, String resource, String endpoint) throws IOException {
-        List entitiesList = new ArrayList();
+    private List getCategories(String baseuri, String resource, String endpoint) throws IOException {
+        List categoriesList = new ArrayList();
         HttpClientWrapper httpClientWrapper = new HttpClientWrapper();
         String request = endpoint + "?uri=" + baseuri + resource;
         String inputJSON = httpClientWrapper.executeRequest(request);
         if (inputJSON.length() != 0) {
             Map scoringCategories = extractCategoriesWithScoring(inputJSON);
-            printMap(scoringCategories);
+            categoriesList = saveCategoriesInList(scoringCategories);
         }
-
-        // TODO Write the logic for saving categories in a list
-
-        return entitiesList;
+        return categoriesList;
     }
 
     private Map extractCategoriesWithScoring(String inputJSON) throws JsonParseException, IOException {
@@ -47,10 +44,19 @@ public class LDRClient implements DomainServiceClient{
         JsonNode node = mapper.readValue(inputJSON, JsonNode.class);
         int i = 0;
         while(node.get(i) != null){
-            scoringCategories.put(node.get("uri"), node.get("distance"));
+            scoringCategories.put(getValue("uri", node.get(i)) , getValue("distance", node.get(i)));
+            i++;
         }
         Map<String, String> orderedMap = new TreeMap<String, String>(scoringCategories);
         return orderedMap;
+    }
+
+    private List saveCategoriesInList(Map<String, String> map) {
+        List categoriesList = new ArrayList();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            categoriesList.add(entry.getKey());
+        }
+        return categoriesList;
     }
 
     private void printMap(Map<String, String> map) {
@@ -58,5 +64,9 @@ public class LDRClient implements DomainServiceClient{
             System.out.println("Key : " + entry.getKey()
                     + " Value : " + entry.getValue());
         }
+    }
+
+    private static String getValue (String string, JsonNode record) {
+        return record.get(string) != null ? record.get(string).asText() : "";
     }
 }
