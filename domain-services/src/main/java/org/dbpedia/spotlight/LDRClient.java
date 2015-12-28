@@ -20,14 +20,42 @@ public class LDRClient implements DomainServiceClient{
         // The first parameter is the base uri
         // The second parameter is the DBpedia resource
         if(parameters.length == 2){
-            System.out.println("In get domain entities: print the result");
-            System.out.println(getCategories(parameters[0], parameters[1], endpoint));
+            Map entitiesWithCategories = getCategories(parameters[0], parameters[1], endpoint);
+            entitiesList = getEntitiesThroughCategories(entitiesWithCategories);
         }
         else throw new Exception("Number of parameters is wrong!");
+        System.out.println(entitiesList);
         return entitiesList;
     }
 
-    private List getCategories(String baseuri, String resource, String endpoint) throws IOException {
+    private List getEntitiesThroughCategories(Map entitiesWithCategories) throws IOException {
+        List entities = new ArrayList();
+        Map <String, List<String>> map = entitiesWithCategories;
+        for(Map.Entry<String, List<String>> entry : map.entrySet()) {
+            String resource = entry.getKey();
+            if(entry.getValue().size() == 0) {
+                return entities;
+            }
+            for (String category : entry.getValue()) {
+                HttpClientWrapper httpClientWrapper = new HttpClientWrapper();
+                String request = endpoint + "?uri=" + resource + "&scope=" + category;
+                String inputJSON = httpClientWrapper.executeRequest(request);
+                if (inputJSON.length() != 0) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode node = mapper.readValue(inputJSON, JsonNode.class);
+                    int i = 0;
+                    while(node.get(i) != null){
+                        entities.add(getValue("uri", node.get(i)));
+                        i++;
+                    }
+                }
+            }
+        }
+        return entities;
+    }
+
+    private Map getCategories(String baseuri, String resource, String endpoint) throws IOException {
+        Map<String, List> entitiesWithCategories = new LinkedHashMap<String, List>();
         List categoriesList = new ArrayList();
         HttpClientWrapper httpClientWrapper = new HttpClientWrapper();
         String request = endpoint + "?uri=" + baseuri + resource;
@@ -36,7 +64,8 @@ public class LDRClient implements DomainServiceClient{
             Map scoringCategories = extractCategoriesWithScoring(inputJSON);
             categoriesList = saveCategoriesInList(scoringCategories);
         }
-        return categoriesList;
+        entitiesWithCategories.put(baseuri + resource, categoriesList);
+        return entitiesWithCategories;
     }
 
     private Map extractCategoriesWithScoring(String inputJSON) throws JsonParseException, IOException {
@@ -60,14 +89,14 @@ public class LDRClient implements DomainServiceClient{
         return categoriesList;
     }
 
+    private static String getValue (String string, JsonNode record) {
+        return record.get(string) != null ? record.get(string).asText() : "";
+    }
+
     private void printMap(Map<String, String> map) {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             System.out.println("Key : " + entry.getKey()
                     + " Value : " + entry.getValue());
         }
-    }
-
-    private static String getValue (String string, JsonNode record) {
-        return record.get(string) != null ? record.get(string).asText() : "";
     }
 }
