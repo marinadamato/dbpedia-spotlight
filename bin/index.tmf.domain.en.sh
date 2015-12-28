@@ -23,6 +23,13 @@ cd ../index
 #    mkdir -p $DBPEDIA_WORKSPACE/output
 #fi
 
+# create a directory for domain files
+if [ -e $DBPEDIA_WORKSPACE/output/domain  ]; then
+    echo "$DBPEDIA_WORKSPACE"'/output/domain already exist.'
+else
+    mkdir -p $DBPEDIA_WORKSPACE/output/domain
+fi
+
 # clean redirect file: there is a bug in the DBpedia version 3.9 (added by Giuseppe Futia)
 #mvn compile
 #mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFRedirectCleaner" -Dexec.args=$INDEX_CONFIG_FILE

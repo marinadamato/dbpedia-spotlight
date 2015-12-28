@@ -20,7 +20,8 @@ public class LDRClient implements DomainServiceClient{
         // The first parameter is the base uri
         // The second parameter is the DBpedia resource
         if(parameters.length == 2){
-            getCategories(parameters[0], parameters[1], endpoint);
+            System.out.println("In get domain entities: print the result");
+            System.out.println(getCategories(parameters[0], parameters[1], endpoint));
         }
         else throw new Exception("Number of parameters is wrong!");
         return entitiesList;

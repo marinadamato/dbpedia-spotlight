@@ -17,15 +17,7 @@ import com.hp.hpl.jena.util.FileManager;
  */
 public class TMFDomainQuery {
 
-    private String sparqlQuery;
-    private String sparqlEndpoint;
-
-    public TMFDomainQuery(String query, String endpoint) {
-        sparqlQuery = query;
-        sparqlEndpoint = endpoint;
-    }
-
-    public List getEntities(int offset) {
+    public List getEntities(String sparqlQuery, String sparqlEndpoint, int offset) {
         List entitiesList = new ArrayList();
         Query query = QueryFactory.create(sparqlQuery + " OFFSET " + offset);
         QueryExecution qexec = QueryExecutionFactory.sparqlService(sparqlEndpoint, query);
