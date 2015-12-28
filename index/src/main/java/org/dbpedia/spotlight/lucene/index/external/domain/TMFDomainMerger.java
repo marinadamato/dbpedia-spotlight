@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * This class merge all domain entities retrieved with SPARQL queries and other services
+ * This class merges all domain entities retrieved with SPARQL queries and other services
  */
 
 public class TMFDomainMerger {
