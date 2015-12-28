@@ -1,5 +1,9 @@
 package org.dbpedia.spotlight.lucene.index.external.domain;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +11,8 @@ import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFReader;
 import com.hp.hpl.jena.util.FileManager;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 
 /**
  *
@@ -30,10 +36,17 @@ public class TMFDomainQuery {
         return entitiesList;
     }
 
-    public static Model getRDFRepresentation(String entity, String baseuri, String endpoint) {
+    public Model getRDFRepresentation(String entity, String baseuri, String endpoint) {
         FileManager fileManager = new FileManager();
         Model describeModel = fileManager.loadModel(baseuri + entity + ".rdf");
         return describeModel;
+    }
+
+    public void publishRDFOnFileSystem(Model model, String outputPath) throws FileNotFoundException {
+        File file = new File(outputPath.replaceAll("(.+)/[^/]+", "$1"));
+        file.mkdirs();
+        OutputStream outTurtle = new FileOutputStream(new File(outputPath));
+        RDFDataMgr.write(outTurtle, model, RDFFormat.NTRIPLES);
     }
 
     public void publishOnEndpoint(String endpoint) {

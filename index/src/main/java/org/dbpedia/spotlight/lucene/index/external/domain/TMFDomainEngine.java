@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -34,6 +35,7 @@ public class TMFDomainEngine {
         String domainConfPath = config.getProperty("tellmefirst.domain.conf", "").trim();
         String domainLoggerPath = config.getProperty("tellmefirst.domain.logger", "").trim();
         String domainProcessingPath = config.getProperty("tellmefirst.domain.processing", "").trim();
+        String domainRDFPath = config.getProperty("tellmefirst.domain.RDF", "").trim();
         String domainEntitiesPath = config.getProperty("org.dbpedia.spotlight.data.conceptURIs", "").trim();
         String ldrEndpoint = config.getProperty("tellmefirst.domain.LDRService").trim();
 
@@ -85,19 +87,21 @@ public class TMFDomainEngine {
             }
         }
 
+        // TODO Add log related to the entities removed
+
         tmfDomainMerger.merge(domainProcessingPath, domainEntitiesPath);
 
-        logger.write("Get categories with the Linked Data Recommender...");
-        LOG.info("Get categories with the Linked Data Recommender...");
+        logger.write("Get new entities with the Linked Data Recommender...");
+        LOG.info("Get new entities with the Linked Data Recommender...");
         logger.newLine();
 
-        getDomainEntities(ldrClient, domainEntitiesPath, root.get(0));
+        getDomainEntities(ldrClient, domainEntitiesPath, root.get(0), domainEntitiesPath);
 
         logger.write("Get RDF representation of entities...");
         LOG.info("Get RDF representation of entities...");
         logger.newLine();
 
-        Model model = getRDF(tmfDomainQuery, domainEntitiesPath, root.get(0));
+        Model model = getRDF(tmfDomainQuery, domainEntitiesPath, root.get(0), domainRDFPath);
         System.out.println(model.toString());
 
         logger.close();
@@ -124,7 +128,7 @@ public class TMFDomainEngine {
         logger.newLine();
     }
 
-    private static void getDomainEntities(LDRClient ldrClient, String filename, JsonNode node) throws Exception {
+    private static void getDomainEntities(LDRClient ldrClient, String filename, JsonNode node, String domainEntitiesPath) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         String baseuri = getValue("baseuri", node);
         String[] clientParameters = new String[2];
@@ -133,16 +137,24 @@ public class TMFDomainEngine {
 
         while (uri != null) {
             clientParameters[1] = uri;
-            ldrClient.getDomainEntities(clientParameters);
+            List domainEntities = ldrClient.getDomainEntities(clientParameters);
+            Iterator<String> iterator = domainEntities.iterator();
+            while (iterator.hasNext()) {
+                FileWriter writer = new FileWriter(domainEntitiesPath, true);
+                writer.write(iterator.next() + "\n");
+                writer.close();
+            }
             uri = reader.readLine();
         }
         reader.close();
     }
 
-    private static Model getRDF(TMFDomainQuery tmfDomainQuery, String entitiesListPath, JsonNode node) throws IOException {
+    private static Model getRDF(TMFDomainQuery tmfDomainQuery, String entitiesListPath, JsonNode node, String domainRDFPath) throws IOException {
         Model model = ModelFactory.createDefaultModel();
+        int processedUris = 0;
         String endpoint = getValue("endpoint", node);
         String baseuri = getValue("baseuri", node);
+
         BufferedReader reader = new BufferedReader(new FileReader(entitiesListPath));
         String entity;
         while(true) {
@@ -150,6 +162,12 @@ public class TMFDomainEngine {
             if(entity == null)
                 break;
             model.add(tmfDomainQuery.getRDFRepresentation(entity, baseuri, endpoint));
+            processedUris++;
+            if (processedUris %20000 == 0) {
+                LOG.info("Publish RDF...");
+                tmfDomainQuery.publishRDFOnFileSystem(model, domainRDFPath);
+                model = ModelFactory.createDefaultModel();
+            }
         }
         reader.close();
         return model;

@@ -17,17 +17,24 @@ JAVA_XMX=16g
 # you have to run maven from the module that contains the indexing classes
 cd ../index
 # the indexing process will generate files in the directory below
-#if [ -e $DBPEDIA_WORKSPACE/output  ]; then
-#    echo "$DBPEDIA_WORKSPACE"'/output already exist.'
-#else
-#    mkdir -p $DBPEDIA_WORKSPACE/output
-#fi
+if [ -e $DBPEDIA_WORKSPACE/output  ]; then
+    echo "$DBPEDIA_WORKSPACE"'/output already exist.'
+else
+    mkdir -p $DBPEDIA_WORKSPACE/output
+fi
 
 # create a directory for domain files
 if [ -e $DBPEDIA_WORKSPACE/output/domain  ]; then
     echo "$DBPEDIA_WORKSPACE"'/output/domain already exist.'
 else
     mkdir -p $DBPEDIA_WORKSPACE/output/domain
+fi
+
+# create a directory for rdf files
+if [ -e $DBPEDIA_WORKSPACE/output/rdf  ]; then
+    echo "$DBPEDIA_WORKSPACE"'/output/rdf already exist.'
+else
+    mkdir -p $DBPEDIA_WORKSPACE/output/rdf
 fi
 
 # clean redirect file: there is a bug in the DBpedia version 3.9 (added by Giuseppe Futia)
