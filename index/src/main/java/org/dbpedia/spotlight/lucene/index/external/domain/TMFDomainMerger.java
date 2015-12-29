@@ -1,7 +1,5 @@
 package org.dbpedia.spotlight.lucene.index.external.domain;
 
-import com.hp.hpl.jena.sparql.pfunction.library.str;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,7 +13,7 @@ import java.util.*;
 
 public class TMFDomainMerger {
 
-    public void merge(String inputDirectory, String outputFilePath) throws IOException {
+    public void mergeDir(String inputDirectory, String outputFilePath) throws IOException {
         BufferedWriter writer;
         Path dst = Paths.get(outputFilePath);
         writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
@@ -36,6 +34,44 @@ public class TMFDomainMerger {
         }
         writer.close();
         stripDuplicatesFromFile(outputFilePath);
+    }
+
+    public void mergeFiles(List inputFiles, String outputFilePath) throws IOException {
+        // Save the new file in the old one
+        BufferedReader originalFilereader = new BufferedReader(new FileReader(outputFilePath));
+        List originalFileRows = new ArrayList();
+        String line;
+        while (true){
+            line = originalFilereader.readLine();
+            if(line == null)
+                break;
+            originalFileRows.add(line);
+        }
+        originalFilereader.close();
+
+        BufferedWriter writer;
+        Path dst = Paths.get(outputFilePath);
+        writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
+
+        Iterator<String> iterator = inputFiles.iterator();
+        while (iterator.hasNext()){
+            String filePath = iterator.next();
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String uri = reader.readLine();
+            while (uri != null) {
+                writer.write(uri);
+                writer.newLine();
+                uri = reader.readLine();
+            }
+            reader.close();
+        }
+
+        Iterator<String> iteratorOriginalFile = originalFileRows.iterator();
+        while (iteratorOriginalFile.hasNext()){
+            writer.write(iterator.next());
+        }
+
+        writer.close();
     }
 
     public void stripDuplicatesFromFile(String filename) throws IOException {
