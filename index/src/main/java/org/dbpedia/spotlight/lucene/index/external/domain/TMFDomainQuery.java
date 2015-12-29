@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.RDFReader;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.util.FileManager;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
@@ -17,7 +17,6 @@ import org.apache.jena.riot.RDFFormat;
 /**
  *
  * This class executes a general SPARQL query to an endpoint
- * It retrieves domain entities specified in a configuration
  * It publishes the RDF representation on a domain endpoint
  *
  */
@@ -36,10 +35,14 @@ public class TMFDomainQuery {
         return entitiesList;
     }
 
-    public Model getRDFRepresentation(String entity, String baseuri, String endpoint) {
+    public Model getRDFRepresentation(String entity, String baseuri) {
         FileManager fileManager = new FileManager();
-        Model describeModel = fileManager.loadModel(baseuri + entity + ".rdf");
-        return describeModel;
+        try {
+            return fileManager.loadModel(baseuri + entity + ".rdf");
+        }
+        finally {
+            return ModelFactory.createDefaultModel();
+        }
     }
 
     public void publishRDFOnFileSystem(Model model, String outputPath) throws FileNotFoundException {
