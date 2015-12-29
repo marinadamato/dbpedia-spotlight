@@ -38,21 +38,19 @@ public class TMFDomainMerger {
 
     public void mergeFiles(List inputFiles, String outputFilePath) throws IOException {
         // Save the new file in the old one
-        BufferedReader originalFilereader = new BufferedReader(new FileReader(outputFilePath));
+        BufferedReader originalFileReader = new BufferedReader(new FileReader(outputFilePath));
         List originalFileRows = new ArrayList();
         String line;
         while (true){
-            line = originalFilereader.readLine();
+            line = originalFileReader.readLine();
             if(line == null)
                 break;
             originalFileRows.add(line);
         }
-        originalFilereader.close();
-
+        originalFileReader.close();
         BufferedWriter writer;
         Path dst = Paths.get(outputFilePath);
         writer = Files.newBufferedWriter(dst, StandardCharsets.UTF_8);
-
         Iterator<String> iterator = inputFiles.iterator();
         while (iterator.hasNext()){
             String filePath = iterator.next();
@@ -65,13 +63,13 @@ public class TMFDomainMerger {
             }
             reader.close();
         }
-
         Iterator<String> iteratorOriginalFile = originalFileRows.iterator();
         while (iteratorOriginalFile.hasNext()){
-            writer.write(iterator.next());
+            writer.write(iteratorOriginalFile.next());
+            writer.newLine();
         }
-
         writer.close();
+        stripDuplicatesFromFile(outputFilePath);
     }
 
     public void stripDuplicatesFromFile(String filename) throws IOException {
