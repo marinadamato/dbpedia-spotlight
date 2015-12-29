@@ -1,0 +1,43 @@
+[{
+	"description": "Get all places from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://dbpedia.org/ontology/Place>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}, {
+	"description": "Get all spatial things from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://www.w3.org/2003/01/geo/wgs84_pos#SpatialThing>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}, {
+	"description": "Get all events from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://dbpedia.org/ontology/Event>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}, {
+	"description": "Get all yago geo entities from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://dbpedia.org/class/yago/YagoGeoEntity>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}, {
+	"description": "Get all yago events from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://dbpedia.org/class/yago/Event100029378>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}, {
+	"description": "Get all umbel place from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "SELECT DISTINCT ?entity WHERE { ?entity a <http://umbel.org/umbel/rc/Place>} LIMIT 10000",
+	"domain": "POIs",
+	"language": "en",
+	"baseuri": "http://dbpedia.org/resource/"
+}]

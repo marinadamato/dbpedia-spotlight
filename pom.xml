@@ -31,7 +31,9 @@
         <jersey.version>1.10</jersey.version>
 
         <heapspace.Xmx.compiler>-Xmx1g</heapspace.Xmx.compiler>
+
         <heapspace.Xmx.indexer>-Xmx1g</heapspace.Xmx.indexer>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spotlight.basedir>${project.basedir}</spotlight.basedir>
@@ -51,6 +53,7 @@
         <module>uima</module>
         <module>dist</module>
         <module>rest-tomcat</module>
+        <module>domain-services</module>
     </modules>
 
     <build>

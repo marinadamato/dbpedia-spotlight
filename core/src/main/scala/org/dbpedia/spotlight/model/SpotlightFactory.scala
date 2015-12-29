@@ -26,7 +26,6 @@ import org.dbpedia.spotlight.disambiguate._
 import org.dbpedia.spotlight.spot.lingpipe.LingPipeSpotter
 import java.io.File
 import org.dbpedia.spotlight.spot._
-import ahocorasick.AhoCorasickSpotter
 import opennlp.{ProbabilisticSurfaceFormDictionary, OpenNLPChunkerSpotter}
 import org.dbpedia.spotlight.tagging.lingpipe.{LingPipeTextUtil, LingPipeTaggedTokenProvider, LingPipeFactory}
 import collection.JavaConversions._
@@ -38,7 +37,6 @@ import org.dbpedia.spotlight.lucene.search.{LuceneCandidateSearcher, MergedOccur
 import com.aliasi.util.AbstractExternalizable
 import com.aliasi.dict.Dictionary
 import org.dbpedia.spotlight.exceptions.ConfigurationException
-import io.Source
 
 /**
  * This class contains many of the "defaults" for DBpedia Spotlight.
@@ -102,13 +100,6 @@ class SpotlightFactory(val configuration: SpotlightConfiguration) {
                 SpotterWithSelector.getInstance(innerSpotter, new ChainedSelector(spotSelectors))
             }
             defaultSpotter
-        } else if(policy == SpotterConfiguration.SpotterPolicy.AhoCorasickSpotter) {
-            val overlap = configuration.getSpotterConfiguration.config.getOrElse("org.dbpedia.spotlight.spot.allowOverlap", "false").equals("true")
-            val caseSensitive = configuration.getSpotterConfiguration.config.getOrElse("org.dbpedia.spotlight.spot.caseSensitive", "false").equals("true")
-            val sourceChunks = Source.fromFile(configuration.getSpotterConfiguration.getSpotterSurfaceForms)
-            val spotter = AhoCorasickSpotter.fromSurfaceForms(sourceChunks.getLines(), caseSensitive, overlap)
-            sourceChunks.close
-            spotters.getOrElse(policy,spotter)
         } else if(policy == SpotterConfiguration.SpotterPolicy.LingPipeSpotter) {
             val overlap = configuration.getSpotterConfiguration.config.getOrElse("org.dbpedia.spotlight.spot.allowOverlap", "false").equals("true")
             val caseSensitive = configuration.getSpotterConfiguration.config.getOrElse("org.dbpedia.spotlight.spot.caseSensitive", "false").equals("true")

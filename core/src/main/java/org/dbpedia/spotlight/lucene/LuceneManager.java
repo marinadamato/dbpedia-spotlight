@@ -18,6 +18,7 @@
 
 package org.dbpedia.spotlight.lucene;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -338,6 +339,34 @@ public class LuceneManager {
         return doc;
     }
 
+    // Added by Federico Cairo
+    public Document add(Document doc, String title, String fieldName) {
+        String cleanTitle = StringEscapeUtils.unescapeJava(title);
+        //System.out.println("Title added: "+cleanTitle);
+        Field typeField = getField(cleanTitle, fieldName);
+        doc.add(typeField);
+        return doc;
+    }
+
+
+    // Added by Federico Cairo
+    public Document addImage(Document doc, String imageUrl, String fieldName) {
+        //System.out.println("Image added: "+imageUrl);
+        Field typeField = getField(imageUrl, fieldName);
+        doc.add(typeField);
+        return doc;
+    }
+
+    // Added by Federico Cairo
+    public Document addSameAs(Document doc, String sameAs, String fieldName) {
+        //System.out.println("SameAs added: " + sameAs);
+        Field typeField = getField(sameAs, fieldName);
+        doc.add(typeField);
+        return doc;
+    }
+
+
+
     /**
      * Modify a Document so it does not Field.Store certain fields anymore     
      */
@@ -516,6 +545,14 @@ public class LuceneManager {
                                     t.typeID(),
                                     Field.Store.YES,
                                     Field.Index.NOT_ANALYZED_NO_NORMS);
+    }
+
+    //FEDE: aggiunto per titles, images e sameAs
+    public Field getField(String title, String fieldName) {
+        return new Field(fieldName,
+                title,
+                Field.Store.YES,
+                Field.Index.NOT_ANALYZED_NO_NORMS);
     }
 
     public Field getUriCountField(int startCount) {

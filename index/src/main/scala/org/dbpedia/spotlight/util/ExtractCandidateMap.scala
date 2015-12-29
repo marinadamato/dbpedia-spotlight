@@ -391,10 +391,13 @@ object ExtractCandidateMap
         redirectsFileName       = config.get("org.dbpedia.spotlight.data.redirects")
         disambiguationsFileName = config.get("org.dbpedia.spotlight.data.disambiguations")
 
-        // output
-        conceptURIsFileName     = config.get("org.dbpedia.spotlight.data.conceptURIs")
-        redirectTCFileName      = config.get("org.dbpedia.spotlight.data.redirectsTC")
-        surfaceFormsFileName    = config.get("org.dbpedia.spotlight.data.surfaceForms")
+        // output modified by Giuseppe Futia. Decode these files in a second step. See TMFIndexUtils.java.
+        //conceptURIsFileName     = config.get("org.dbpedia.spotlight.data.conceptURIs")
+        //redirectTCFileName      = config.get("org.dbpedia.spotlight.data.redirectsTC")
+        //surfaceFormsFileName    = config.get("org.dbpedia.spotlight.data.surfaceForms")
+        conceptURIsFileName     = config.get("org.dbpedia.spotlight.data.conceptURIsToDecode")
+        redirectTCFileName      = config.get("org.dbpedia.spotlight.data.redirectsTCToDecode")
+        surfaceFormsFileName    = config.get("org.dbpedia.spotlight.data.surfaceFormsToDecode")
 
         maximumSurfaceFormLength = config.get("org.dbpedia.spotlight.data.maxSurfaceFormLength").toInt
 

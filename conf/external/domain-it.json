@@ -1,0 +1,43 @@
+[{
+	"description": "Get all places from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://dbpedia.org/ontology/Place> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}, {
+	"description": "Get all spatial things from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://www.w3.org/2003/01/geo/wgs84_pos#SpatialThing> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}, {
+	"description": "Get all events from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://dbpedia.org/ontology/Event> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}, {
+	"description": "Get all yago geo entities from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://dbpedia.org/class/yago/YagoGeoEntity> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}, {
+	"description": "Get all yago events from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://dbpedia.org/class/yago/Event100029378> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}, {
+	"description": "Get all umbel place from DBpedia",
+	"endpoint": "http://dbpedia.org/sparql",
+	"query": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl:<http://www.w3.org/2002/07/owl#> SELECT DISTINCT ?entity WHERE { ?entityEng a <http://umbel.org/umbel/rc/Place> . ?entityEng owl:sameAs ?entity . FILTER regex( str(?entity), 'it.dbpedia', 'i' ) . } LIMIT 10000",
+	"domain": "POIs",
+	"language": "it",
+	"baseuri": "http://it.dbpedia.org/resource/"
+}]

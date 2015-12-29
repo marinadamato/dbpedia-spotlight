@@ -7,3 +7,12 @@ target
 *.log
 *~
 index/output
+data/tellmefirst/dbpedia/en/original/*
+!data/tellmefirst/dbpedia/en/original/blacklistedURIPatterns.en.list
+!data/tellmefirst/dbpedia/en/original/stopwords.en.list
+data/tellmefirst/dbpedia/it/original/*
+!data/tellmefirst/dbpedia/it/original/blacklistedURIPatterns.it.list
+!data/tellmefirst/dbpedia/it/original/stopwords.it.list
+data/tellmefirst/dbpedia/en/output/*
+data/tellmefirst/dbpedia/it/output/*
+

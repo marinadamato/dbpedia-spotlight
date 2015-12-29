@@ -97,5 +97,93 @@ object TypesLoader
         SpotlightLog.info(this.getClass, "Done. Loaded %d types.", i)
         typesMap
     }
+
+  def getTitlesMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
+    SpotlightLog.info(this.getClass, "Loading titles map...")
+    var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
+    var i = 0;
+    // CAUTION: this assumes that the most specific type is listed last
+    val parser = new NxParser(instanceTypesStream)
+    while (parser.hasNext) {
+      val triple = parser.next
+      if(!triple(2).toString.endsWith("owl#Thing")) {
+        i = i + 1;
+        val resource = new DBpediaResource(triple(0).toString)
+        val t = triple(2).toString
+        val titleList : java.util.LinkedHashSet[String] = titlesMap.get(resource.uri).getOrElse(new LinkedHashSet[String]())
+        titleList.add(t)
+        titlesMap = titlesMap.updated(resource.uri, titleList)
+      }
+    }
+    SpotlightLog.info(this.getClass, "Done. Loaded %d titles.".format(i))
+    titlesMap
+  }
+
+  def getImagesMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
+    println("fede2")
+    SpotlightLog.info(this.getClass, "Loading images map...")
+    var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
+    var i = 0;
+    // CAUTION: this assumes that the most specific type is listed last
+    val parser = new NxParser(instanceTypesStream)
+    while (parser.hasNext) {
+      val triple = parser.next
+      if(triple(0).toString.startsWith("http://dbpedia.org") && triple(1).toString.startsWith("http://xmlns.com/foaf/0.1/depiction")) {
+        i = i + 1;
+        val resource = new DBpediaResource(triple(0).toString)
+        val t = triple(2).toString
+        val titleList : java.util.LinkedHashSet[String] = titlesMap.get(resource.uri).getOrElse(new LinkedHashSet[String]())
+        titleList.add(t)
+        titlesMap = titlesMap.updated(resource.uri, titleList)
+      }
+    }
+   SpotlightLog.info(this.getClass, "Done. Loaded %d images.".format(i))
+    titlesMap
+  }
+
+  def getImagesMap_italian_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
+    println("fede2")
+    SpotlightLog.info(this.getClass, "Loading italian images map...")
+    var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
+    var i = 0;
+    // CAUTION: this assumes that the most specific type is listed last
+    val parser = new NxParser(instanceTypesStream)
+    while (parser.hasNext) {
+      val triple = parser.next
+      if(triple(0).toString.startsWith("http://it.dbpedia.org") && triple(1).toString.startsWith("http://xmlns.com/foaf/0.1/depiction")) {
+        i = i + 1;
+        val resource = new DBpediaResource(triple(0).toString)
+        val t = triple(2).toString
+        val titleList : java.util.LinkedHashSet[String] = titlesMap.get(resource.uri).getOrElse(new LinkedHashSet[String]())
+        titleList.add(t)
+        titlesMap = titlesMap.updated(resource.uri, titleList)
+      }
+    }
+    SpotlightLog.info(this.getClass, "Done. Loaded %d images.".format(i))
+    titlesMap
+  }
+
+
+  def getSomeAsMap_java(instanceTypesStream : InputStream) : java.util.Map[String,java.util.LinkedHashSet[String]] = {
+    println("fede2")
+    SpotlightLog.info(this.getClass, "Loading someAs map...")
+    var titlesMap = Map[String,java.util.LinkedHashSet[String]]()
+    var i = 0;
+    // CAUTION: this assumes that the most specific type is listed last
+    val parser = new NxParser(instanceTypesStream)
+    while (parser.hasNext) {
+      val triple = parser.next
+      if(triple(2).toString.startsWith("http://dbpedia.org")) {
+        i = i + 1;
+        val resource = new DBpediaResource(triple(0).toString)
+        val t = triple(2).toString
+        val titleList : java.util.LinkedHashSet[String] = titlesMap.get(resource.uri).getOrElse(new LinkedHashSet[String]())
+        titleList.add(t)
+        titlesMap = titlesMap.updated(resource.uri, titleList)
+      }
+    }
+    SpotlightLog.info(this.getClass, "Done. Loaded %d someAs.".format(i))
+    titlesMap
+  }
     
 }

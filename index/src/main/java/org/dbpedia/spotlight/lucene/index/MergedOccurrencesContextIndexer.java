@@ -30,6 +30,8 @@ import org.dbpedia.spotlight.model.DBpediaResource;
 import org.dbpedia.spotlight.model.DBpediaResourceOccurrence;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +98,10 @@ public class MergedOccurrencesContextIndexer extends OccurrenceContextIndexer {
     @Override
     public void add(DBpediaResourceOccurrence occ) throws IndexException {
         numEntriesProcessed++;
-        
+
         String uri = occ.resource().uri();
+        //FEDE: aggiunto sout
+        //System.out.println("URI: "+uri);
 
         double gb = 1073741824;
         double totalMemory = Runtime.getRuntime().totalMemory();
