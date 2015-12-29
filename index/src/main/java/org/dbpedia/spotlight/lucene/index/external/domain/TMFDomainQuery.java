@@ -39,8 +39,7 @@ public class TMFDomainQuery {
         FileManager fileManager = new FileManager();
         try {
             return fileManager.loadModel(baseuri + entity + ".rdf");
-        }
-        finally {
+        } catch (Exception e) {
             return ModelFactory.createDefaultModel();
         }
     }
