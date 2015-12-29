@@ -21,14 +21,13 @@ public class LDRClient implements DomainServiceClient{
         // The second parameter is the DBpedia resource
         if(parameters.length == 2){
             Map entitiesWithCategories = getCategories(parameters[0], parameters[1], endpoint);
-            entitiesList = getEntitiesThroughCategories(entitiesWithCategories);
+            entitiesList = getEntitiesThroughCategories(entitiesWithCategories, parameters[0]);
         }
         else throw new Exception("Number of parameters is wrong!");
-        System.out.println(entitiesList);
         return entitiesList;
     }
 
-    private List getEntitiesThroughCategories(Map entitiesWithCategories) throws IOException {
+    private List getEntitiesThroughCategories(Map entitiesWithCategories, String baseuri) throws IOException {
         List entities = new ArrayList();
         Map <String, List<String>> map = entitiesWithCategories;
         for(Map.Entry<String, List<String>> entry : map.entrySet()) {
@@ -45,7 +44,7 @@ public class LDRClient implements DomainServiceClient{
                     JsonNode node = mapper.readValue(inputJSON, JsonNode.class);
                     int i = 0;
                     while(node.get(i) != null){
-                        entities.add(getValue("uri", node.get(i)));
+                        entities.add(getValue("uri", node.get(i)).split(baseuri)[1]);
                         i++;
                     }
                 }
