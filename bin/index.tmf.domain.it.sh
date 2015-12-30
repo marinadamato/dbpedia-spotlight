@@ -38,36 +38,36 @@ else
 fi
 
 # clean redirect file: there is a bug in the DBpedia version 3.9 (added by Giuseppe Futia)
-#mvn compile
-#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFRedirectCleaner" -Dexec.args=$INDEX_CONFIG_FILE
+mvn compile
+mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFRedirectCleaner" -Dexec.args=$INDEX_CONFIG_FILE
 
 # clean the Wikipedia Dump (added by Giuseppe Futia)
-#mvn compile
-#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFWikiDumpCleaner" -Dexec.args=$INDEX_CONFIG_FILE
+mvn compile
+mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFWikiDumpCleaner" -Dexec.args=$INDEX_CONFIG_FILE
 
 # extract valid URIs, synonyms and surface forms from DBpedia
-#mvn scala:run -Dlauncher=ExtractCandidateMap "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE"
+mvn scala:run -Dlauncher=ExtractCandidateMap "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE"
+
+# decode URIs of the extracted files from the 3.9 version of DBpedia (added by Giuseppe Futia)
+mvn compile
+mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFUriDecoder" -Dexec.args=$INDEX_CONFIG_FILE
 
 # get domain entities through SPARQL queries and other services
 mvn compile
 mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.domain.TMFDomainEngine" -Dexec.args=$INDEX_CONFIG_FILE
 
-# decode URIs of the extracted files from the 3.9 version of DBpedia (added by Giuseppe Futia)
-#mvn compile
-#mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.utils.TMFUriDecoder" -Dexec.args=$INDEX_CONFIG_FILE
-
 # now we collect parts of Wikipedia dump where DBpedia resources occur and output those occurrences as Tab-Separated-Values
-#echo -e "Parsing Wikipedia dump to extract occurrences...\n"
-#mvn scala:run -Dlauncher=ExtractOccsFromWikipedia "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.tsv"
+echo -e "Parsing Wikipedia dump to extract occurrences...\n"
+mvn scala:run -Dlauncher=ExtractOccsFromWikipedia "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.tsv"
 
 # (recommended) sorting the occurrences by URI will speed up context merging during indexing
-#echo -e "Sorting occurrences to speed up indexing...\n"
-#sort -t$'\t' -k2 $DBPEDIA_WORKSPACE/output/occs.tsv >$DBPEDIA_WORKSPACE/output/occs.uriSorted.tsv
+echo -e "Sorting occurrences to speed up indexing...\n"
+sort -t$'\t' -k2 $DBPEDIA_WORKSPACE/output/occs.tsv >$DBPEDIA_WORKSPACE/output/occs.uriSorted.tsv
 
-#set -e
+set -e
 # create a lucene index out of the occurrences
-#echo -e "Creating a context index from occs.tsv...\n"
-#mvn scala:run -Dlauncher=IndexMergedOccurrences "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.uriSorted.tsv"
+echo -e "Creating a context index from occs.tsv...\n"
+mvn scala:run -Dlauncher=IndexMergedOccurrences "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.uriSorted.tsv"
 # NOTE: if you get an out of memory error from the command above, try editing ../index/pom.xml with correct jvmArg and file arguments, then run:
 #mvn scala:run -Dlauncher=IndexMergedOccurrences "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.uriSorted.tsv"
 
@@ -76,13 +76,13 @@ mvn exec:java -e -Dexec.mainClass="org.dbpedia.spotlight.lucene.index.external.d
 #cp -R $DBPEDIA_WORKSPACE/output/index $DBPEDIA_WORKSPACE/output/index-backup
 
 # add entity types to index
-#echo -e "Adding Types to index... \n"
-#mvn scala:run -Dlauncher=AddTypesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/index"
+echo -e "Adding Types to index... \n"
+mvn scala:run -Dlauncher=AddTypesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/domain-index"
 
 # add titles to index (added by Federico Cairo)
-#echo -e "Adding Wikipedia Titles to index... \n"
-#mvn scala:run -Dlauncher=AddTitlesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/index-withTypes"
+echo -e "Adding Wikipedia Titles to index... \n"
+mvn scala:run -Dlauncher=AddTitlesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/domain-index-withTypes"
 
 # add images to index (added by Federico Cairo)
-#echo -e "Adding Images to index... \n"
-#mvn scala:run -Dlauncher=AddImagesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/index-withTypesTitles"
+echo -e "Adding Images to index... \n"
+mvn scala:run -Dlauncher=AddImagesToIndex "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/domain-index-withTypesTitles"
