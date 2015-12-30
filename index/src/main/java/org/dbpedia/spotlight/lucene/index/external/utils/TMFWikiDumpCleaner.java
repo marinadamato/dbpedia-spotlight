@@ -62,7 +62,8 @@ public class TMFWikiDumpCleaner {
                         line.contains("<ns>710</ns>") ||
                         line.contains("<ns>711</ns>") ||
                         line.contains("<ns>828</ns>") ||
-                        line.contains("<ns>829</ns>")
+                        line.contains("<ns>829</ns>") ||
+                        line.contains("<ns>2600</ns>")
                         ){
                     LOG.info("Correct row "+rows+ ":" +line);
                     line = line.replaceAll("[0-9]+/*\\.*[0-9]*","0");
