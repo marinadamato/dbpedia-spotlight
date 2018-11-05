@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <dbpedia.spotlight.version>0.7</dbpedia.spotlight.version>
+        <dbpedia.spotlight.version>0.7.1</dbpedia.spotlight.version>
 
         <java.compiler.version>1.6</java.compiler.version>
         <scala.compiler.version>2.9.2</scala.compiler.version>
@@ -37,11 +37,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spotlight.basedir>${project.basedir}</spotlight.basedir>
+        <guava.version>21.0</guava.version>
     </properties>
 
     <groupId>org.dbpedia.spotlight</groupId>
     <artifactId>spotlight</artifactId>
-    <version>0.7</version>
+    <version>0.7.1</version>
     <packaging>pom</packaging>
     <name>DBpedia Spotlight annotation framework (parent POM)</name>
 
@@ -325,7 +326,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>r07</version>
+                <version>${guava.version}</version>
                 <!--
                   License: Apache Software License, Version 2.0
                 -->
@@ -885,9 +886,9 @@
             </dependency>
 
             <dependency>
-                <groupId>org.aksw</groupId>
+                <groupId>org.nlp2rdf</groupId>
                 <artifactId>nif</artifactId>
-                <version>0.1</version>
+                <version>0.3.7-spotlight</version>
                 <!--
                   License: Apache Software License, Version 2.0
                 -->
