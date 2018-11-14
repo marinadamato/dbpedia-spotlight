@@ -1,0 +1,26 @@
+# started 2013-07-10T03:11:48Z
+<http://dbpedia.org/resource/AccessibleComputing> <http://www.w3.org/2000/01/rdf-schema#label> "AccessibleComputing"@en .
+<http://dbpedia.org/resource/AfghanistanGeography> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanGeography"@en .
+<http://dbpedia.org/resource/AfghanistanHistory> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanHistory"@en .
+<http://dbpedia.org/resource/AfghanistanPeople> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanPeople"@en .
+<http://dbpedia.org/resource/AfghanistanCommunications> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanCommunications"@en .
+<http://dbpedia.org/resource/AfghanistanMilitary> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanMilitary"@en .
+<http://dbpedia.org/resource/AfghanistanTransportations> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanTransportations"@en .
+<http://dbpedia.org/resource/AfghanistanTransnationalIssues> <http://www.w3.org/2000/01/rdf-schema#label> "AfghanistanTransnationalIssues"@en .
+<http://dbpedia.org/resource/AmoeboidTaxa> <http://www.w3.org/2000/01/rdf-schema#label> "AmoeboidTaxa"@en .
+<http://dbpedia.org/resource/AssistiveTechnology> <http://www.w3.org/2000/01/rdf-schema#label> "AssistiveTechnology"@en .
+<http://dbpedia.org/resource/AmoeboidTaxa> <http://www.w3.org/2000/01/rdf-schema#label> "AmoeboidTaxa"@en .
+<http://dbpedia.org/resource/Amoeboid> <http://www.w3.org/2000/01/rdf-schema#label> "Amoeboid"@en .
+<http://dbpedia.org/resource/Amoeboids> <http://www.w3.org/2000/01/rdf-schema#label> "Amoeboids"@en .
+<http://dbpedia.org/resource/Amoeboid_Zingatularians> <http://www.w3.org/2000/01/rdf-schema#label> "Amoeboid Zingatularians"@en .
+<http://dbpedia.org/resource/Amoeboid_movement> <http://www.w3.org/2000/01/rdf-schema#label> "Amoeboid movement"@en .
+<http://dbpedia.org/resource/Computer_accessibility> <http://www.w3.org/2000/01/rdf-schema#label> "Computer accessibility"@en .
+<http://dbpedia.org/resource/Geography_of_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Geography of Afghanistan"@en .
+<http://dbpedia.org/resource/History_of_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "History of Afghanistan"@en .
+<http://dbpedia.org/resource/Demography_of_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Demography of Afghanistan"@en .
+<http://dbpedia.org/resource/Communications_in_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Communications in Afghanistan"@en .
+<http://dbpedia.org/resource/Military_of_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Military of Afghanistan"@en .
+<http://dbpedia.org/resource/Transport_in_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Transport in Afghanistan"@en .
+<http://dbpedia.org/resource/Foreign_relations_of_Afghanistan> <http://www.w3.org/2000/01/rdf-schema#label> "Foreign relations of Afghanistan"@en .
+<http://dbpedia.org/resource/Assistive_technology> <http://www.w3.org/2000/01/rdf-schema#label> "Assistive technology"@en .
+# completed 2013-07-10T10:14:30Z
