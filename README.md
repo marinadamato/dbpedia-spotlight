@@ -3,7 +3,7 @@
 
 TellMeFirst Indexes Builder is a project for creating the Lucene Indexes of [TellMeFirst](https://github.com/TellMeFirst/tellmefirst), a tool for classifying and enriching English and Italian textual documents via [Linked Open Data](http://linkeddata.org/). This project is based on a customized version of [DBpedia Spotlight](https://github.com/dbpedia-spotlight/dbpedia-spotlight/wiki), a tool for automatically annotating mentions of DBpedia resources in text.
 
-##Documentation
+## Documentation
 
 More documentation is available from the [TellMeFirst Index Builder wiki](https://github.com/tellmefirst/dbpedia-spotlight/wiki). 
 
