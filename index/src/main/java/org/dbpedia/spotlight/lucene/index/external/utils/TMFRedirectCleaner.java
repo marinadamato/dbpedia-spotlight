@@ -51,7 +51,7 @@ public class TMFRedirectCleaner {
         //To improve in order to find all cases
         while ((line = reader.readLine()) != null) {
             //LOG.info(line);
-            if(line.toString().contains("B_with_stroke")) {
+            if(line.toString().contains("B_with_stroke") || line.toString().contains("Cristopher_Pavon")) {
                 LOG.info("Remove "+line);
                 continue;
             }
