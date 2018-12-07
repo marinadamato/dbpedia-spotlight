@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.dbpedia.spotlight</groupId>
         <artifactId>spotlight</artifactId>
-        <version>0.7</version>
+        <version>0.7.1</version>
     </parent>
 
     <artifactId>rest</artifactId>
@@ -132,8 +132,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.aksw</groupId>
+            <groupId>org.nlp2rdf</groupId>
             <artifactId>nif</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>19.0</version>
         </dependency>
     </dependencies>
 
