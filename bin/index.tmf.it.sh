@@ -35,7 +35,7 @@ cd ../index
 
 # now we collect parts of Wikipedia dump where DBpedia resources occur and output those occurrences as Tab-Separated-Values
 #echo -e "Parsing Wikipedia dump to extract occurrences...\n"
-#mvn scala:run -Dlauncher=ExtractOccsFromWikipedia "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.tsv"
+#mvn -Djdk.xml.totalEntitySizeLimit=0 scala:run -Dlauncher=ExtractOccsFromWikipedia "-DjavaOpts.Xmx=$JAVA_XMX" "-DaddArgs=$INDEX_CONFIG_FILE|$DBPEDIA_WORKSPACE/output/occs.tsv"
 
 # (recommended) sorting the occurrences by URI will speed up context merging during indexing
 #echo -e "Sorting occurrences to speed up indexing...\n"
